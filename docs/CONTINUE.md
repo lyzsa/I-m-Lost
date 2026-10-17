@@ -1,4 +1,4 @@
-> **Superseded for the 10-hour hackathon build by [PLAN.md](../PLAN.md).** Kept for reference; do not implement from this file.
+> **Superseded for the 10-hour hackathon build by [TASKS.md](../TASKS.md).** Kept for reference; do not implement from this file.
 
 # 给下一次开发的入口
 
