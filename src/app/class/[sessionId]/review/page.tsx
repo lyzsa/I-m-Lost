@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { explainSignal, getMySignals, getSession, makeStudyGuide, type Session, type Signal } from "@/lib/api";
 import { RectBox, SlideView } from "@/components/SlideView";
+import { InstructorInk } from "@/features/student/InstructorInk";
 import { HomeLogo } from "@/features/professor/HomeLogo"; // shared with the professor screens so the logo matches
 
 type Guide = { status: "idle" | "writing" | "done" | "error"; text: string }; // text = the guide, or why the AI failed
@@ -97,6 +98,7 @@ export default function Page() {
             <h2 className="font-bold">Slide {n}</h2>
             {slide && (
               <SlideView imageUrl={slide.imageUrl} alt={`Slide ${n}`} className="mt-2">
+                <InstructorInk sessionId={session.id} slideNumber={n} />
                 {items.filter(s => s.rect).map(s => <RectBox key={s.id} rect={s.rect!} className="rounded-sm border-2 border-orange-500 bg-orange-500/15" />)}
               </SlideView>
             )}

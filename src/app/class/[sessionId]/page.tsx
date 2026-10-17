@@ -11,6 +11,7 @@ import { explainSignal, getMySignals, getSession, subscribeToSession, type Sessi
 import type { Rect } from "@/lib/domain";
 import { RectBox, SlideView } from "@/components/SlideView";
 import { ExplainPanel, type Explain } from "@/features/student/ExplainPanel";
+import { InstructorInk } from "@/features/student/InstructorInk";
 import { FloatingActions, type Toast } from "@/features/student/FloatingActions";
 import { LostButton } from "@/features/student/LostButton";
 import { BRUSH_MAX, BRUSH_MIN, PaintLayer, paintedBox, type Stroke } from "@/features/student/PaintLayer";
@@ -228,6 +229,7 @@ export default function Page() {
           ) : null}
 
           <SlideView imageUrl={slide.imageUrl} alt={`Slide ${shown}`} className={painting ? "ring-4 ring-amber-400" : ""}>
+            <InstructorInk sessionId={session.id} slideNumber={shown} /> {/* first = underneath the student's marks */}
             {myBoxes.map(s => (
               <RectBox
                 key={s.id}
