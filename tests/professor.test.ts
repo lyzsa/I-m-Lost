@@ -81,3 +81,16 @@ test("instructor strokes: live events add this slide's strokes once, in time ord
   assert.deepEqual(list.map(a => a.id), ["a", "b"]);
   assert.deepEqual(applyAnnotationEvent(list, { type: "removed", ids: ["a"] }, 1).map(a => a.id), ["b"]);
 });
+
+test("spot windows: the spot under the pointer is found, and a spot keeps the same key across re-renders", async () => {
+  const { findDenseAreas } = await import("../src/features/professor/denseAreas");
+  const { areaAt, areaKey } = await import("../src/features/professor/DenseAreaLayer");
+  const box = (studentId: string, x: number, y: number) =>
+    ({ id: studentId + x, sessionId: "s", slideNumber: 1, studentId, kind: "region" as const, rect: { x, y, width: .2, height: .1 }, categories: ["Other" as const], createdAt: "" });
+  const signals = [box("ana", .1, .1), box("ben", .12, .12), box("cam", .6, .7), box("dan", .62, .72)];
+  const areas = findDenseAreas(signals, 2);
+  assert.equal(areas.length, 2);
+  assert.ok(areaAt(areas, .2, .15));        // inside the top-left spot
+  assert.equal(areaAt(areas, .45, .45), undefined); // empty part of the slide
+  assert.equal(areaKey(findDenseAreas(signals, 2)[0]), areaKey(areas[0])); // stable key
+});

@@ -1,4 +1,4 @@
-import { atPoint, categories, type Category } from "@/lib/domain";
+import { categories, type Category } from "@/lib/domain";
 import type { Signal } from "@/lib/api";
 import { ViewResponsesButton } from "./OtherResponses";
 import { ReasonPie } from "./ReasonPie";
@@ -19,12 +19,9 @@ function CategoryBars({ signals, onOpenOther }: { signals: Signal[]; onOpenOther
   );
 }
 
-// Live numbers for the current slide, plus the boxes under the spot the professor clicked.
-export function StatsPanel({ signals, spot, onClearSpot, onOpenOther }: {
-  signals: Signal[]; spot?: Spot; onClearSpot: () => void; onOpenOther: (where: string, answers: string[]) => void;
-}) {
+// Live numbers for the whole current slide. (Per-spot breakdowns are in the spot windows on the slide.)
+export function StatsPanel({ signals, onOpenOther }: { signals: Signal[]; onOpenOther: (where: string, answers: string[]) => void }) {
   const all = slideStats(signals);
-  const atSpot = spot ? atPoint(signals, spot.x, spot.y) : null;
 
   return (
     <section className="rounded-2xl bg-white p-5">
@@ -35,21 +32,11 @@ export function StatsPanel({ signals, spot, onClearSpot, onOpenOther }: {
         <div className="rounded-xl bg-gray-50 p-2"><dt className="text-xs text-gray-600">Students</dt><dd className="text-2xl font-bold">{all.students}</dd></div>
       </dl>
 
-      {atSpot ? (
-        <div className="mt-4">
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-sm font-bold">At the spot you clicked: {atSpot.length} {atSpot.length === 1 ? "box" : "boxes"}</h3>
-            <button className="text-sm text-emerald-800 underline" onClick={onClearSpot}>Show whole slide</button>
-          </div>
-          <CategoryBars signals={atSpot} onOpenOther={a => onOpenOther("the spot you clicked", a)} />
-        </div>
-      ) : (
-        <div className="mt-4">
-          <h3 className="text-sm font-bold">Why students boxed this slide</h3>
-          <CategoryBars signals={signals} onOpenOther={a => onOpenOther("whole slide", a)} />
-          {all.boxes > 0 && <p className="mt-3 text-xs text-gray-500">Point at a dark area on the slide to see why students boxed it. Click to pin it here.</p>}
-        </div>
-      )}
+      <div className="mt-4">
+        <h3 className="text-sm font-bold">Why students boxed this slide</h3>
+        <CategoryBars signals={signals} onOpenOther={a => onOpenOther("whole slide", a)} />
+        {all.boxes > 0 && <p className="mt-3 text-xs text-gray-500">Point at a numbered spot on the slide to see why students marked it. Click it to keep its window open.</p>}
+      </div>
       <p className="mt-3 text-xs text-gray-500">Counts are boxes, not students. One box can count in several categories.</p>
     </section>
   );

@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { getSession, subscribeToSession, type Session } from "@/lib/api";
 import { SlideView, toSlideFraction } from "@/components/SlideView";
 import { AnnotationLayer } from "@/features/annotations/AnnotationLayer";
-import { DenseAreaLayer } from "@/features/professor/DenseAreaLayer";
+import { DenseAreaLayer, areaAt, areaKey } from "@/features/professor/DenseAreaLayer";
 import { DrawLayer } from "@/features/professor/DrawLayer";
 import { DrawToolbar, PEN_COLORS, PEN_WIDTHS } from "@/features/professor/DrawToolbar";
 import { EyeIcon } from "@/features/professor/EyeIcon";
@@ -17,8 +17,7 @@ import { LiveControls } from "@/features/professor/LiveControls";
 import { OtherResponsesModal, type ResponsesView } from "@/features/professor/OtherResponses";
 import { rememberClass } from "@/features/professor/myClasses";
 import { SlideNav } from "@/features/professor/SlideNav";
-import { SpotPopup } from "@/features/professor/SpotPopup";
-import { StatsPanel, type Spot } from "@/features/professor/StatsPanel";
+import { StatsPanel } from "@/features/professor/StatsPanel";
 import { useInstructorPen } from "@/features/professor/useInstructorPen";
 import { useSlideSignals } from "@/features/professor/useSlideSignals";
 import { ZoomStage } from "@/features/professor/ZoomStage";
@@ -30,9 +29,9 @@ export default function HostLivePage() {
   // A manual choice only lasts for the current slide + phase.
   const [heatChoice, setHeatChoice] = useState<{ key: string; show: boolean }>();
   const signals = useSlideSignals(sessionId, session?.currentSlide ?? 1);
-  // The spot the professor clicked on the heatmap; like the toggle, it only lasts for the current slide + phase.
-  const [spotChoice, setSpotChoice] = useState<{ key: string; spot: Spot }>();
-  const [hover, setHover] = useState<Spot>(); // where the mouse is over the slide (no hover on touch screens)
+  // Confusion-spot windows: the spot under the mouse shows its window; clicked spots stay open (current slide + phase only).
+  const [hoverSpot, setHoverSpot] = useState<string>();
+  const [pinnedSpots, setPinnedSpots] = useState<{ key: string; ids: string[] }>();
   const [threshold, setThreshold] = useState(2); // a "dense area" needs at least this many different students
   const [responses, setResponses] = useState<ResponsesView>(); // the large "Other" responses window, when open
   const areas = useMemo(() => findDenseAreas(signals, threshold), [signals, threshold]);
@@ -79,7 +78,8 @@ export default function HostLivePage() {
   const heatKey = `${session.currentSlide}:${session.phase}`;
   const showHeat = heatChoice?.key === heatKey ? heatChoice.show : session.phase !== "presenting";
   const boxCount = signals.filter(s => s.kind === "region").length;
-  const spot = showHeat && spotChoice?.key === heatKey ? spotChoice.spot : undefined;
+  const pinned = showHeat && pinnedSpots?.key === heatKey ? pinnedSpots.ids : [];
+  const setPinned = (ids: string[]) => setPinnedSpots({ key: heatKey, ids });
 
   return (
     <main className="mx-auto max-w-7xl p-4 md:p-6">
@@ -97,23 +97,29 @@ export default function HostLivePage() {
             <SlideView
               imageUrl={slide.imageUrl}
               alt={`Slide ${slide.number}`}
-              className={drawing ? "ring-4 ring-amber-400" : showHeat ? "cursor-crosshair" : ""}
-              onClick={e => { if (showHeat && !drawing) setSpotChoice({ key: heatKey, spot: toSlideFraction(e, e.currentTarget) }); }}
-              onPointerMove={e => { if (showHeat && !drawing && e.pointerType === "mouse") setHover(toSlideFraction(e, e.currentTarget)); }}
-              onPointerLeave={() => setHover(undefined)}
+              className={drawing ? "ring-4 ring-amber-400" : showHeat && hoverSpot ? "cursor-pointer" : ""}
+              onClick={e => {
+                if (!showHeat || drawing) return;
+                const p = toSlideFraction(e, e.currentTarget);
+                const hit = areaAt(areas, p.x, p.y);
+                if (!hit) return setPinned([]);                       // empty part of the slide: close pinned windows
+                const k = areaKey(hit);
+                setPinned(pinned.includes(k) ? pinned.filter(x => x !== k) : [...pinned, k]); // click a spot: pin / unpin
+              }}
+              onPointerMove={e => {
+                if (!showHeat || drawing || e.pointerType !== "mouse") return;
+                const p = toSlideFraction(e, e.currentTarget);
+                const hit = areaAt(areas, p.x, p.y);
+                setHoverSpot(hit ? areaKey(hit) : undefined);
+              }}
+              onPointerLeave={() => setHoverSpot(undefined)}
             >
               {showHeat && <HeatmapLayer signals={signals} />}
               <AnnotationLayer annotations={pen.strokes} />
               {showHeat && (
-                <DenseAreaLayer areas={areas}
+                <DenseAreaLayer areas={areas} hovered={drawing ? undefined : hoverSpot} pinned={pinned}
+                  onUnpin={k => setPinned(pinned.filter(x => x !== k))}
                   onOpenResponses={(n, answers) => setResponses({ title: `Slide ${slide.number} · dense area ${n}`, answers })} />
-              )}
-              {showHeat && !drawing && hover && <SpotPopup signals={signals} spot={hover} />}
-              {spot && (
-                <div
-                  className="pointer-events-none absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-emerald-700 shadow"
-                  style={{ left: `${spot.x * 100}%`, top: `${spot.y * 100}%` }}
-                />
               )}
               {drawing && <DrawLayer color={penColor} width={penWidth} onStroke={pts => pen.addStroke(pts, penColor, penWidth)} />}
             </SlideView>
@@ -121,7 +127,7 @@ export default function HostLivePage() {
           <SlideNav session={session} onChange={setSession} />
           {session.phase !== "ended" && (
             <div className="mt-3">
-              <DrawToolbar drawing={drawing} onToggle={() => { setDrawMode(d => !d); setHover(undefined); }}
+              <DrawToolbar drawing={drawing} onToggle={() => { setDrawMode(d => !d); setHoverSpot(undefined); }}
                 color={penColor} onColor={setPenColor} width={penWidth} onWidth={setPenWidth}
                 canUndo={pen.canUndo} onUndo={pen.undo} hasStrokes={pen.hasStrokes} onClear={pen.clearSlide} />
               {pen.error && <p role="alert" className="mt-1 text-sm text-red-700">{pen.error}</p>}
@@ -153,7 +159,7 @@ export default function HostLivePage() {
           <JoinCard sessionId={session.id} code={session.code} />
           <LiveControls session={session} onChange={setSession} />
           {showHeat ? (
-            <StatsPanel signals={signals} spot={spot} onClearSpot={() => setSpotChoice(undefined)}
+            <StatsPanel signals={signals}
               onOpenOther={(where, answers) => setResponses({ title: `Slide ${slide.number} · ${where}`, answers })} />
           ) : (
             <p className="px-2 text-sm text-gray-500">Feedback is hidden in clean view. Use &quot;Show heatmap&quot; to see it.</p>
