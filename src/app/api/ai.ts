@@ -13,8 +13,9 @@ export type Part = { type: "text"; text: string } | { type: "image"; data: strin
 export type SignalRow = {
   id: string; session_id: string; slide_number: number; student_id: string; kind: "lost" | "region";
   categories: string[]; x: number | null; y: number | null; width: number | null; height: number | null;
+  other_text: string | null;
 };
-export const SIGNAL_COLUMNS = "id, session_id, slide_number, student_id, kind, categories, x, y, width, height";
+export const SIGNAL_COLUMNS = "id, session_id, slide_number, student_id, kind, categories, x, y, width, height, other_text";
 export type SlideRow = { slide_number: number; image_url: string; extracted_text: string };
 
 // An error whose message the student screens can show as is.
@@ -32,11 +33,13 @@ export function db() {
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 
 // One line describing what the student marked, e.g. "Box from 10% to 40% across and 20% to 45% down. Why: Need an example."
+// When they picked Other, their own words follow inside <student_note> (angle brackets removed so they can't close the tag).
 export function describeMark(s: SignalRow): string {
   if (s.kind === "lost" || s.x === null || s.y === null || s.width === null || s.height === null)
     return "Tapped I'm Lost for the whole slide.";
+  const note = s.other_text ? ` In the student's own words: <student_note>${s.other_text.replace(/[<>]/g, "")}</student_note>` : "";
   return `Box from ${pct(s.x)} to ${pct(s.x + s.width)} across and ${pct(s.y)} to ${pct(s.y + s.height)} down. ` +
-    `Why: ${s.categories.join(", ")}.`;
+    `Why: ${s.categories.join(", ")}.${note}`;
 }
 
 export function slideText(slide: SlideRow): string {

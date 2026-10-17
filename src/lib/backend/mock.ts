@@ -5,7 +5,7 @@
 // - Reset everything: in the browser console run  localStorage.removeItem("lost-mock-db-v1")  and refresh.
 // - Make AI calls fail (to test error states): localStorage.setItem("lost-mock-fail-ai", "1")
 import type { LivePhase, NewSignal, Session, Signal, Unsubscribe } from "../types";
-import { ERRORS, normalizeCode, randomCode, validateSignal } from "./rules";
+import { ERRORS, cleanOtherText, normalizeCode, randomCode, validateSignal } from "./rules";
 
 type Member = { sessionId: string; studentId: string; name: string };
 type DB = { sessions: Session[]; signals: Signal[]; members: Member[] };
@@ -181,6 +181,7 @@ export async function submitSignal(input: NewSignal): Promise<Signal> {
     kind: input.kind,
     rect: input.kind === "region" ? input.rect : undefined,
     categories: [...input.categories],
+    otherText: cleanOtherText(input.otherText),
     studentId,
     createdAt: new Date().toISOString(),
   };
@@ -205,7 +206,8 @@ export async function explainSignal(signalId: string): Promise<string> {
   const db = read();
   const signal = db.signals.find(s => s.id === signalId);
   if (!signal) throw new Error("Saved item not found");
-  const what = signal.categories.length ? signal.categories.join(", ") : "general confusion";
+  const what = (signal.categories.length ? signal.categories.join(", ") : "general confusion") +
+    (signal.otherText ? `: "${signal.otherText}"` : "");
   signal.explanation =
     `[Mock explanation] You marked part of slide ${signal.slideNumber} (${what}). ` +
     `A real AI answer will appear here once Person C connects /api/explain. Source: Slide ${signal.slideNumber}`;
@@ -223,7 +225,7 @@ export async function makeStudyGuide(sessionId: string): Promise<string> {
     "[Mock study guide]",
     ...slides.map(n => {
       const items = mine.filter(s => s.slideNumber === n);
-      return `\nSlide ${n}\n- You marked ${items.length} item(s): ${items.map(s => s.kind === "lost" ? "I'm Lost" : s.categories.join(" + ")).join("; ")}\n- Practice question: (the real AI writes one here)\n- Source: Slide ${n}`;
+      return `\nSlide ${n}\n- You marked ${items.length} item(s): ${items.map(s => s.kind === "lost" ? "I'm Lost" : s.categories.join(" + ") + (s.otherText ? ` ("${s.otherText}")` : "")).join("; ")}\n- Practice question: (the real AI writes one here)\n- Source: Slide ${n}`;
     }),
   ].join("\n");
 }
