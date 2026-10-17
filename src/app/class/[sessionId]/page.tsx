@@ -10,7 +10,9 @@ import { useParams } from "next/navigation";
 import { explainSignal, getMySignals, getSession, subscribeToSession, type Session, type Signal } from "@/lib/api";
 import type { Rect } from "@/lib/domain";
 import { RectBox, SlideView } from "@/components/SlideView";
+import { ClassSummary } from "@/features/student/ClassSummary";
 import { ExplainPanel, type Explain } from "@/features/student/ExplainPanel";
+import { ExplainRail } from "@/features/student/ExplainRail";
 import { InstructorInk } from "@/features/student/InstructorInk";
 import { FloatingActions, type Toast } from "@/features/student/FloatingActions";
 import { LostButton } from "@/features/student/LostButton";
@@ -52,6 +54,7 @@ export default function Page() {
     return () => observer.disconnect();
   }, [dock]);
   const [explain, setExplain] = useState<Explain | null>(null);
+  const [summaryOpen, setSummaryOpen] = useState(true); // the end-of-class summary; closing it keeps it closed
 
   useEffect(() => {
     getSession(sessionId)
@@ -79,6 +82,8 @@ export default function Page() {
   const shown = paintSlide ?? (following ? live : viewing);
   const slide = session.slides[shown - 1];
   const myBoxes = mine.filter(s => s.kind === "region" && s.slideNumber === shown && s.rect);
+  const explainedHere = myBoxes.filter(s => s.explanation);
+  const explainedAll = mine.filter(s => s.kind === "region" && s.rect && s.explanation);
 
   function browse(to: number) {
     const next = Math.max(1, Math.min(total, to));
@@ -216,6 +221,11 @@ export default function Page() {
               <Link href={`/class/${session.id}/review`} className="mt-3 block rounded-lg bg-white p-3 text-center font-bold text-emerald-900">
                 Open My Review →
               </Link>
+              {explainedAll.length > 0 && (
+                <button onClick={() => setSummaryOpen(true)} className="mt-2 w-full rounded-lg border border-white/40 p-2 text-sm font-bold">
+                  💡 Today&apos;s AI explanations ({explainedAll.length})
+                </button>
+              )}
             </div>
           ) : painting ? (
             live !== shown && <p className="mb-3 rounded-xl bg-amber-100 p-3">Class moved to slide {live}. Save or cancel your mark to catch up.</p>
@@ -228,35 +238,39 @@ export default function Page() {
             <p className="mb-3 rounded-xl bg-sky-100 p-3 text-sm">Professor is reviewing feedback</p>
           ) : null}
 
-          <SlideView imageUrl={slide.imageUrl} alt={`Slide ${shown}`} className={painting ? "ring-4 ring-amber-400" : ""}>
-            <InstructorInk sessionId={session.id} slideNumber={shown} /> {/* first = underneath the student's marks */}
-            {myBoxes.map(s => (
-              <RectBox
-                key={s.id}
-                rect={s.rect!}
-                // clickable on any slide and in any phase, but not while painting (then taps must reach the paint layer)
-                onClick={painting ? undefined : () => openBox(s)}
-                title={s.explanation ? "See the AI explanation" : "Ask the AI to explain this"}
-                className={`rounded-sm border-orange-500 ${explain?.signalId === s.id
-                  ? "border-[3px] bg-orange-500/35 ring-4 ring-orange-300"
-                  : "border-2 bg-orange-500/15"}`}
-              >
-                {s.explanation && <span aria-hidden className="absolute right-0.5 top-0.5 text-sm leading-none">💡</span>}
-              </RectBox>
-            ))}
-            {painting && (
-              <PaintLayer
-                strokes={strokes}
-                brush={brush}
-                pencilOnly={pencilOnly}
-                onPencil={() => setPencilOnly(true)}
-                onChange={(next, nextBox, aspect) => { setStrokes(next); setBox(nextBox); slideAspect.current = aspect; }}
-              />
-            )}
-            {box && <RectBox rect={box} className="rounded-sm border-[3px] border-dashed border-orange-600" />}
-          </SlideView>
+          <div className="flex gap-1.5">
+            <SlideView imageUrl={slide.imageUrl} alt={`Slide ${shown}`} className={`min-w-0 flex-1 ${painting ? "ring-4 ring-amber-400" : ""}`}>
+              <InstructorInk sessionId={session.id} slideNumber={shown} /> {/* first = underneath the student's marks */}
+              {myBoxes.map(s => (
+                <RectBox
+                  key={s.id}
+                  rect={s.rect!}
+                  // clickable on any slide and in any phase, but not while painting (then taps must reach the paint layer)
+                  onClick={painting ? undefined : () => openBox(s)}
+                  title={s.explanation ? "See the AI explanation" : "Ask the AI to explain this"}
+                  className={`rounded-sm border-orange-500 ${explain?.signalId === s.id
+                    ? "border-[3px] bg-orange-500/35 ring-4 ring-orange-300"
+                    : "border-2 bg-orange-500/15"}`}
+                />
+              ))}
+              {painting && (
+                <PaintLayer
+                  strokes={strokes}
+                  brush={brush}
+                  pencilOnly={pencilOnly}
+                  onPencil={() => setPencilOnly(true)}
+                  onChange={(next, nextBox, aspect) => { setStrokes(next); setBox(nextBox); slideAspect.current = aspect; }}
+                />
+              )}
+              {box && <RectBox rect={box} className="rounded-sm border-[3px] border-dashed border-orange-600" />}
+            </SlideView>
+            {/* 💡 in the margin, level with each explained box (stays while painting so the slide doesn't change size) */}
+            {explainedHere.length > 0 && <ExplainRail marks={explainedHere} activeId={explain?.signalId} disabled={painting} onOpen={openBox} />}
+          </div>
           {myBoxes.length > 0 && !painting && (
-            <p className="mt-2 text-center text-sm text-gray-500">Tap your orange boxes to see the AI explanation again.</p>
+            <p className="mt-2 text-center text-sm text-gray-500">
+              {explainedHere.length ? "Tap 💡 or an orange box to see the AI explanation again." : "Tap an orange box to ask the AI about it."}
+            </p>
           )}
 
           <SlideStrip
@@ -312,6 +326,11 @@ export default function Page() {
             <span><span className="text-xl">✍️</span><br /><span className="text-xs">Highlight</span></span>,
           )}
         </FloatingActions>
+      )}
+
+      {/* When the class ends: every AI explanation from today, until the student closes it */}
+      {ended && summaryOpen && explainedAll.length > 0 && (
+        <ClassSummary explained={explainedAll} reviewHref={`/class/${session.id}/review`} onClose={() => setSummaryOpen(false)} />
       )}
 
       {/* Phones: a bottom sheet, only while it's needed (picking reasons, or reading an explanation). */}
