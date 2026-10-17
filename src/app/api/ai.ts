@@ -50,7 +50,7 @@ export function slideText(slide: SlideRow): string {
 // Formats Gemini can't read (like the SVG demo slides) fall back to the slide text only.
 export async function slideImage(url: string, budget: { bytesLeft: number }): Promise<Part[]> {
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(5_000) });
     const type = res.headers.get("content-type")?.split(";")[0].trim() ?? "";
     if (!res.ok || !VISION_TYPES.includes(type)) return [];
     const bytes = Buffer.from(await res.arrayBuffer());
@@ -67,18 +67,27 @@ export const imageBudget = () => ({ bytesLeft: 14_000_000 });
 type ErrorBody = { error?: { message?: string; status?: string; details?: { reason?: string }[] } };
 type Step = { type?: string; content?: { type?: string; text?: string }[] };
 
-export async function ask(system: string, input: Part[]): Promise<string> {
+const TOO_SLOW = 504;
+
+// Under heavy load Gemini sometimes answers "busy" (503) and sometimes just hangs. So:
+// - every request has a time limit (attemptMs) and the whole call finishes within totalMs,
+//   which must stay under the route's maxDuration or Vercel cuts it off with a bare 504;
+// - a "busy" model gets a second try 0.8 s later; a model that hung is skipped for the next one.
+export async function ask(system: string, input: Part[], { attemptMs = 15_000, totalMs = 45_000 } = {}): Promise<string> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new AiError("AI isn't set up yet (check GEMINI_API_KEY)", 503);
-  // Gemini's "busy" errors usually pass within a second, so each model gets a second try before moving on.
-  let lastError: unknown;
+  const deadline = Date.now() + totalMs;
+  let lastError: unknown = new AiError("AI is taking too long right now. Try again.", TOO_SLOW);
   for (const model of MODELS) {
     for (let attempt = 1; attempt <= 2; attempt++) {
+      const left = deadline - Date.now();
+      if (left < 3_000) throw lastError;
       try {
-        return await askModel(key, model, system, input);
+        return await askModel(key, model, system, input, Math.min(attemptMs, left));
       } catch (err) {
         if (!(err instanceof AiError) || !err.tryAnotherModel) throw err;
         lastError = err;
+        if (err.status === TOO_SLOW) break;
         if (attempt === 1) await new Promise(resolve => setTimeout(resolve, 800));
       }
     }
@@ -86,10 +95,17 @@ export async function ask(system: string, input: Part[]): Promise<string> {
   throw lastError;
 }
 
-async function askModel(key: string, model: string, system: string, input: Part[]): Promise<string> {
+async function askModel(key: string, model: string, system: string, input: Part[], timeoutMs: number): Promise<string> {
+  const signal = AbortSignal.timeout(timeoutMs); // also covers reading the response body
+  const tooSlow = (err: unknown) => err instanceof DOMException && err.name === "TimeoutError";
+  const slowError = () => {
+    console.error("Gemini too slow", model, `${timeoutMs} ms`);
+    return new AiError("AI is taking too long right now. Try again.", TOO_SLOW, true);
+  };
   let res: Response;
   try {
     res = await fetch(API_URL, {
+      signal,
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": key },
       body: JSON.stringify({
@@ -100,11 +116,16 @@ async function askModel(key: string, model: string, system: string, input: Part[
         store: false, // don't keep students' requests on Google's side
       }),
     });
-  } catch {
-    throw new AiError("AI is unavailable right now", 502, true);
+  } catch (err) {
+    throw tooSlow(err) ? slowError() : new AiError("AI is unavailable right now", 502, true);
   }
 
-  const data: (ErrorBody & { status?: string; steps?: Step[] }) | null = await res.json().catch(() => null);
+  let data: (ErrorBody & { status?: string; steps?: Step[] }) | null = null;
+  try {
+    data = await res.json();
+  } catch (err) {
+    if (tooSlow(err)) throw slowError();
+  }
   if (!res.ok) {
     const body = data as ErrorBody | ErrorBody[] | null;
     const error = (Array.isArray(body) ? body[0] : body)?.error; // errors can come wrapped in an array

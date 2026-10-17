@@ -39,7 +39,8 @@ export async function POST(request: Request) {
     }
     content.push({ type: "text", text: "Write my study guide." });
 
-    return Response.json({ guide: await ask(SYSTEM, content) });
+    // A whole guide takes longer to write than one explanation; both limits stay under maxDuration (120 s).
+    return Response.json({ guide: await ask(SYSTEM, content, { attemptMs: 40_000, totalMs: 90_000 }) });
   } catch (err) {
     return errorResponse(err);
   }
