@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSession } from "@/lib/api";
 import { pdfToSlides } from "@/features/professor/pdfToSlides";
+import { HomeLogo } from "@/features/professor/HomeLogo";
 
 export default function HostPage() {
   const router = useRouter();
@@ -29,8 +30,9 @@ export default function HostPage() {
   }
 
   return (
-    <main className="mx-auto max-w-xl p-8 pt-16">
-      <p className="text-sm font-bold tracking-widest text-emerald-700">PROFESSOR</p>
+    <main className="mx-auto max-w-xl p-8">
+      <HomeLogo />
+      <p className="mt-10 text-sm font-bold tracking-widest text-emerald-700">PROFESSOR</p>
       <h1 className="mt-2 text-4xl font-bold">Start a class</h1>
       <div className="mt-8 space-y-5 rounded-2xl bg-white p-6">
         <label className="block">
