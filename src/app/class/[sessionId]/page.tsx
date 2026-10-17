@@ -44,7 +44,6 @@ export default function Page() {
   const slideAspect = useRef(16 / 9); // the slide's width / height, from the paint layer (for undo)
   const [boxes, setBoxes] = useState<Rect[]>([]); // one per highlighted part
   const [picking, setPicking] = useState(false); // phones: done highlighting, now picking reasons
-  const [erasing, setErasing] = useState(false); // eraser picked in the toolbar
   const [msg, setMsg] = useState<(Toast & { slide: number }) | null>(null); // last save error, for the slide it was made on (the ✓ on the button says "saved")
   const [wide, setWide] = useState(false); // laptop-sized screen: the controls go in a right-hand column
   const [dock, setDock] = useState<HTMLDivElement | null>(null); // spot at the bottom of the page on phones
@@ -114,7 +113,6 @@ export default function Page() {
     setBoxes([]);
     setPaintSlide(null);
     setPicking(false);
-    setErasing(false);
   }
 
   function saved(signal: Signal) {
@@ -192,14 +190,11 @@ export default function Page() {
               <div className="flex items-center gap-1 px-1">
                 <span className="mr-1 text-gray-600">Brush</span>
                 <input type="range" min={BRUSH_MIN} max={BRUSH_MAX} value={brush} aria-label="Brush size"
-                  onChange={e => { setBrush(Number(e.target.value)); setErasing(false); }}
+                  onChange={e => setBrush(Number(e.target.value))}
                   className="min-w-0 flex-1 accent-gray-900" />
                 <span className="grid h-9 w-9 shrink-0 place-items-center" aria-hidden>
-                  <span className={`rounded-full ${erasing ? "bg-gray-300" : "bg-yellow-400"}`} style={{ width: brush, height: brush }} />
+                  <span className="rounded-full bg-yellow-400" style={{ width: brush, height: brush }} />
                 </span>
-                <span className="mx-1 h-6 w-px bg-gray-200" />
-                <button onClick={() => setErasing(e => !e)} disabled={!strokes.length && !erasing} aria-pressed={erasing}
-                  className={`rounded-lg px-2.5 py-2 disabled:text-gray-400 ${erasing ? "bg-gray-900 text-white" : "hover:bg-gray-100"}`}>Eraser</button>
               </div>
             </div>
           )}
@@ -284,7 +279,6 @@ export default function Page() {
                   strokes={strokes}
                   brush={brush}
                   pencilOnly={pencilOnly}
-                  erasing={erasing}
                   onPencil={() => setPencilOnly(true)}
                   onChange={(next, nextBoxes, aspect) => { setStrokes(next); setBoxes(nextBoxes); slideAspect.current = aspect; }}
                 />
