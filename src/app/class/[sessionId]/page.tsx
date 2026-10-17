@@ -120,9 +120,13 @@ export default function Page() {
   const pointButton = (className: string, label: ReactNode) => (
     <button onClick={() => setPaintSlide(shown)} title="Point to the exact part you don't understand" className={className}>{label}</button>
   );
-  const message = (
-    <p role="status" className={`text-center text-sm ${msg?.slide === shown && msg.error ? "text-red-700" : "text-gray-600"}`}>
-      {msg?.slide === shown ? msg.text : "I'm Lost = the whole slide. ✍️ Point = one exact spot."}
+  // The last save message for this slide ("Saved ✓", errors); nothing otherwise.
+  const message = msg?.slide === shown && (
+    <p role="status" className={`text-center text-sm ${msg.error ? "text-red-700" : "text-gray-600"}`}>{msg.text}</p>
+  );
+  const switchClass = (
+    <p className="text-center text-sm">
+      <Link href="/join?switch=1" className="text-gray-500 underline">Join a different class</Link>
     </p>
   );
   // What to show while painting (reasons) or after Explain Now. Phones show it in a bottom sheet, laptops in the side column.
@@ -196,11 +200,7 @@ export default function Page() {
           </nav>
 
           {following && !painting && !ended && <p className="mt-3 text-center text-sm text-gray-500">Following the professor live</p>}
-          {!painting && (
-            <p className="mt-2 text-center text-sm">
-              <Link href="/join?switch=1" className="text-gray-500 underline">Join a different class</Link>
-            </p>
-          )}
+          {!wide && !painting && <div className="mt-2">{switchClass}</div>}
 
           {/* Phones: the bottom of the page. Once it scrolls into view, the floating buttons settle here. */}
           {!wide && !ended && (
@@ -227,6 +227,7 @@ export default function Page() {
                 {lostButton("w-full rounded-xl p-4 text-xl")}
                 {pointButton("w-full rounded-xl border-2 border-emerald-900 bg-white p-4 text-lg font-bold text-emerald-900", "✍️ Point to the exact part")}
                 {message}
+                {switchClass}
               </div>
             )}
             {sheet}
