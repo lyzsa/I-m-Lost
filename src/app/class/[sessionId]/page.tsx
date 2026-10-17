@@ -15,6 +15,7 @@ import { FloatingActions, type Toast } from "@/features/student/FloatingActions"
 import { LostButton } from "@/features/student/LostButton";
 import { PaintLayer, type Point } from "@/features/student/PaintLayer";
 import { RegionPanel } from "@/features/student/RegionPanel";
+import { rememberClass } from "@/features/student/lastClass";
 import { HomeLogo } from "@/features/professor/HomeLogo"; // shared with the professor screens so the logo matches
 
 export default function Page() {
@@ -48,7 +49,9 @@ export default function Page() {
   const [explain, setExplain] = useState<Explain | null>(null);
 
   useEffect(() => {
-    getSession(sessionId).then(setSession).catch(() => setSession(null));
+    getSession(sessionId)
+      .then(s => { setSession(s); if (s) rememberClass(s); }) // so /join brings the student back here
+      .catch(() => setSession(null));
     getMySignals(sessionId).then(setMine).catch(() => {});
     const unsubscribe = subscribeToSession(sessionId, setSession);
     return unsubscribe;
@@ -193,6 +196,11 @@ export default function Page() {
           </nav>
 
           {following && !painting && !ended && <p className="mt-3 text-center text-sm text-gray-500">Following the professor live</p>}
+          {!painting && (
+            <p className="mt-2 text-center text-sm">
+              <Link href="/join?switch=1" className="text-gray-500 underline">Join a different class</Link>
+            </p>
+          )}
 
           {/* Phones: the bottom of the page. Once it scrolls into view, the floating buttons settle here. */}
           {!wide && !ended && (
