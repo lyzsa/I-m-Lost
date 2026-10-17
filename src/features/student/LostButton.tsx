@@ -14,9 +14,10 @@ type Props = {
   done: boolean;
   onSaved: (signal: Signal) => void;
   onStatus: (text: string, isError: boolean) => void;
+  className?: string;
 };
 
-export function LostButton({ sessionId, slideNumber, done, onSaved, onStatus }: Props) {
+export function LostButton({ sessionId, slideNumber, done, onSaved, onStatus, className = "w-full rounded-xl p-3 text-xl" }: Props) {
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">(done ? "saved" : "idle");
   const [failedId, setFailedId] = useState<string | null>(null);
 
@@ -40,9 +41,10 @@ export function LostButton({ sessionId, slideNumber, done, onSaved, onStatus }: 
     <button
       onClick={() => send(failedId ?? crypto.randomUUID())}
       disabled={state === "saving"}
-      className="w-full rounded-xl bg-emerald-900 p-3 text-xl font-bold text-white"
+      title="The whole slide lost me"
+      className={`bg-emerald-900 font-bold text-white ${className}`}
     >
-      {state === "saving" ? "Saving..." : state === "error" ? "Try again" : state === "saved" ? "I'm Lost ✓" : "I'm Lost"}
+      {state === "saving" ? "Saving..." : state === "error" ? "Try again" : state === "saved" || done ? "I'm Lost ✓" : "I'm Lost"}
     </button>
   );
 }
