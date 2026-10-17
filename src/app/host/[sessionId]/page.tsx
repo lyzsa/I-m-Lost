@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getSession, subscribeToSession, type Session } from "@/lib/api";
-import { SlideView } from "@/components/SlideView";
+import { SlideView, toSlideFraction } from "@/components/SlideView";
 import { HeatmapLayer } from "@/features/professor/HeatmapLayer";
 import { HomeLogo } from "@/features/professor/HomeLogo";
 import { JoinCard } from "@/features/professor/JoinCard";
 import { LiveControls } from "@/features/professor/LiveControls";
+import { SpotPopup } from "@/features/professor/SpotPopup";
+import { StatsPanel, type Spot } from "@/features/professor/StatsPanel";
 import { useSlideSignals } from "@/features/professor/useSlideSignals";
 
 export default function HostLivePage() {
@@ -17,6 +19,9 @@ export default function HostLivePage() {
   // A manual choice only lasts for the current slide + phase.
   const [heatChoice, setHeatChoice] = useState<{ key: string; show: boolean }>();
   const signals = useSlideSignals(sessionId, session?.currentSlide ?? 1);
+  // The spot the professor clicked on the heatmap; like the toggle, it only lasts for the current slide + phase.
+  const [spotChoice, setSpotChoice] = useState<{ key: string; spot: Spot }>();
+  const [hover, setHover] = useState<Spot>(); // where the mouse is over the slide (no hover on touch screens)
 
   useEffect(() => {
     let active = true;
@@ -39,6 +44,7 @@ export default function HostLivePage() {
   const heatKey = `${session.currentSlide}:${session.phase}`;
   const showHeat = heatChoice?.key === heatKey ? heatChoice.show : session.phase !== "presenting";
   const boxCount = signals.filter(s => s.kind === "region").length;
+  const spot = showHeat && spotChoice?.key === heatKey ? spotChoice.spot : undefined;
 
   return (
     <main className="mx-auto max-w-7xl p-4 md:p-6">
@@ -51,8 +57,22 @@ export default function HostLivePage() {
       </header>
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div>
-          <SlideView imageUrl={slide.imageUrl} alt={`Slide ${slide.number}`}>
+          <SlideView
+            imageUrl={slide.imageUrl}
+            alt={`Slide ${slide.number}`}
+            className={showHeat ? "cursor-crosshair" : ""}
+            onClick={e => { if (showHeat) setSpotChoice({ key: heatKey, spot: toSlideFraction(e, e.currentTarget) }); }}
+            onPointerMove={e => { if (showHeat && e.pointerType === "mouse") setHover(toSlideFraction(e, e.currentTarget)); }}
+            onPointerLeave={() => setHover(undefined)}
+          >
             {showHeat && <HeatmapLayer signals={signals} />}
+            {showHeat && hover && <SpotPopup signals={signals} spot={hover} />}
+            {spot && (
+              <div
+                className="pointer-events-none absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-emerald-700 shadow"
+                style={{ left: `${spot.x * 100}%`, top: `${spot.y * 100}%` }}
+              />
+            )}
           </SlideView>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <button className="rounded-xl bg-white px-4 py-2" onClick={() => setHeatChoice({ key: heatKey, show: !showHeat })}>
@@ -68,6 +88,11 @@ export default function HostLivePage() {
         <aside className="space-y-4">
           <JoinCard code={session.code} />
           <LiveControls session={session} onChange={setSession} />
+          {showHeat ? (
+            <StatsPanel signals={signals} spot={spot} onClearSpot={() => setSpotChoice(undefined)} />
+          ) : (
+            <p className="px-2 text-sm text-gray-500">Feedback is hidden in clean view. Use &quot;Show heatmap&quot; to see it.</p>
+          )}
         </aside>
       </div>
     </main>
