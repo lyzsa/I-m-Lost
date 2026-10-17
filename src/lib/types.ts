@@ -1,4 +1,4 @@
-// Shared data shapes. Frozen: see PLAN.md section 4.6 before changing anything here.
+// Shared data shapes. Frozen: see TASKS.md section 4.6 before changing anything here.
 import type { Category, Phase, Rect } from "./domain";
 
 export type LivePhase = Phase | "ended"; // "presenting" | "reviewing" | "ended"

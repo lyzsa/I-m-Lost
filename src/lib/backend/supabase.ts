@@ -1,4 +1,4 @@
-// REAL backend (used when NEXT_PUBLIC_USE_MOCK=false). Person C fills this in: PLAN.md step C2 (data) and C4 (AI).
+// REAL backend (used when NEXT_PUBLIC_USE_MOCK=false). Person C fills this in: TASKS.md step C2 (data) and C4 (AI).
 // Every function must match the Backend type in src/lib/api.ts; `npm run typecheck` fails if it doesn't.
 // Reuse ERRORS / validateSignal / randomCode from ./rules so the real app behaves exactly like the mock.
 import type { LivePhase, NewSignal, Session, Signal, Unsubscribe } from "../types";
@@ -6,7 +6,7 @@ import type { LivePhase, NewSignal, Session, Signal, Unsubscribe } from "../type
 const STUDENT_KEY = "lost-student-id";
 
 function notBuilt(name: string): never {
-  throw new Error(`${name}: real backend not built yet (PLAN.md step C2/C4). Set NEXT_PUBLIC_USE_MOCK=true in .env.local.`);
+  throw new Error(`${name}: real backend not built yet (TASKS.md step C2/C4). Set NEXT_PUBLIC_USE_MOCK=true in .env.local.`);
 }
 
 // ---------- Professor ----------

@@ -1,4 +1,4 @@
-// Shared slide display. Frozen after the foundation: see PLAN.md section 4.4.
+// Shared slide display. Frozen after the foundation: see TASKS.md section 4.4.
 // All positions are fractions 0..1 of the slide image, so boxes line up on any screen size.
 import type { ComponentProps, ReactNode } from "react";
 import type { Rect } from "@/lib/domain";

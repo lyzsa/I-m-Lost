@@ -4,7 +4,7 @@
 
 ## 下次从这里继续
 
-**10 小时 hackathon 版本：先读 [PLAN.md](PLAN.md)（英文，取代 TASKS.md 的 36 小时计划）。AI 编程助手规则见 [AGENTS.md](AGENTS.md)。**
+**10 小时 hackathon 版本：先读 [TASKS.md](TASKS.md)（英文的 10 小时计划，原名 PLAN.md；旧的 36 小时清单可在 Git 历史里找到）。AI 编程助手规则见 [AGENTS.md](AGENTS.md)。**
 
 1. 阅读 [已确认决策](docs/decisions.md) 和 [PRD](docs/PRD-draft.md)。
 2. 依照 [TASKS.md](TASKS.md) 领取 A/B/C 分工，先完成一条真实跨设备闭环。
@@ -52,7 +52,7 @@ supabase/migrations/      默认拒绝访问的数据结构草案
 docs/                     产品决策、PRD、架构与交接
  tests/                   核心行为测试
 .github/workflows/        CI
-TASKS.md                  三人分工 / 36 小时计划
+TASKS.md                  三人分工 / 10 小时计划
 ```
 
 ## GitHub
