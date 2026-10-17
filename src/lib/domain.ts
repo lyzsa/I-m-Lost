@@ -2,7 +2,7 @@ export const categories = ["I don’t understand", "Need an example", "Why does 
 export type Category = typeof categories[number];
 export type Rect = { x: number; y: number; width: number; height: number };
 export type Phase = "presenting" | "reviewing";
-// Anything with an optional box and categories: the real Signal (src/lib/types.ts) and the /demo sandbox's DemoSignal both fit.
+// Anything with an optional box and categories: the real Signal (src/lib/types.ts) and the simpler DemoSignal used in tests both fit.
 type Marked = { rect?: Rect; categories: readonly Category[] };
 export type DemoSignal = { id: string; slide: number; rect?: Rect; categories: Category[]; saved: true };
 export function advance(slide: number, phase: Phase, total: number): {slide: number; phase: Phase} {

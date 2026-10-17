@@ -1,5 +1,5 @@
 // THE CONTRACT. Pages and components get data ONLY from this file.
-// Names, inputs and outputs are frozen: see TASKS.md section 4 before changing anything.
+// Names, inputs and outputs are frozen: see docs/build-plan.md section 4 before changing anything.
 //
 // NEXT_PUBLIC_USE_MOCK=false in .env.local -> real Supabase (src/lib/backend/supabase.ts)
 // anything else (default)                 -> fake data in the browser (src/lib/backend/mock.ts)

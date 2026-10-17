@@ -1,4 +1,4 @@
-// POST /api/study-guide  {sessionId, studentId}  ->  {guide}   (TASKS.md step C4, used by My Review)
+// POST /api/study-guide  {sessionId, studentId}  ->  {guide}   (docs/build-plan.md step C4, used by My Review)
 // Builds the guide only from this student's own signals, grouped by slide.
 import { STUDY_GUIDE_SYSTEM, SIGNAL_COLUMNS, ask, db, errorResponse, imageBudget, listMarks, slideImages, slideText, type Part, type SignalRow, type SlideRow } from "../ai";
 

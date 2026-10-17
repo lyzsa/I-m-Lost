@@ -1,4 +1,4 @@
-// POST /api/explain  {signalId}  ->  {explanation}   (TASKS.md step C4, used by Explain Now)
+// POST /api/explain  {signalId}  ->  {explanation}   (docs/build-plan.md step C4, used by Explain Now)
 // Reads the saved signal and its slide, asks Gemini, stores the answer on the signal.
 import { EXPLAIN_SYSTEM, SIGNAL_COLUMNS, ask, db, describeMark, errorResponse, imageBudget, slideImages, slideText, type SignalRow, type SlideRow } from "../ai";
 

@@ -1,5 +1,5 @@
 "use client";
-// Finger/mouse/pencil "highlighter" on top of a slide (PLAN.md step B4; team choice: paint instead of dragging a box).
+// Finger/mouse/pencil "highlighter" on top of a slide (docs/build-plan.md step B4; team choice: paint instead of dragging a box).
 // Whatever the student paints, the saved selection is the neat box around it, so the contract (Rect) doesn't change.
 // Put it inside <SlideView>, only while the student is in paint mode (so a stray thumb can't mark anything).
 // Points are 0..1 fractions of the slide, so the paint stays on the same words when resized.

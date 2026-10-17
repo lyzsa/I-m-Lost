@@ -1,5 +1,5 @@
 "use client";
-// Student join form (PLAN.md step B1). The code is pre-filled from /join?code=XXXXXX so the QR code works.
+// Student join form (docs/build-plan.md step B1). The code is pre-filled from /join?code=XXXXXX so the QR code works.
 // If this device already joined a class that is still running, go straight back to it, unless the student
 // came here to switch (/join?switch=1) or opened a different class's code.
 import { useEffect, useState } from "react";
