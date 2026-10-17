@@ -16,7 +16,7 @@ import { ExplainRail } from "@/features/student/ExplainRail";
 import { InstructorInk } from "@/features/student/InstructorInk";
 import { FloatingActions, type Toast } from "@/features/student/FloatingActions";
 import { LostButton } from "@/features/student/LostButton";
-import { BRUSHES, PaintLayer, paintedBox, type Stroke } from "@/features/student/PaintLayer";
+import { BRUSHES, PaintLayer, paintedBoxes, type Stroke } from "@/features/student/PaintLayer";
 import { RegionPanel } from "@/features/student/RegionPanel";
 import { SlideStrip } from "@/features/student/SlideStrip";
 import { rememberClass } from "@/features/student/lastClass";
@@ -42,7 +42,7 @@ export default function Page() {
   const [brush, setBrush] = useState<number>(BRUSHES.Medium); // brush width in screen pixels
   const [pencilOnly, setPencilOnly] = useState(false); // an Apple Pencil was used: fingers scroll, only the pencil paints
   const slideAspect = useRef(16 / 9); // the slide's width / height, from the paint layer (for undo)
-  const [box, setBox] = useState<Rect | null>(null);
+  const [boxes, setBoxes] = useState<Rect[]>([]); // one per highlighted part
   const [msg, setMsg] = useState<(Toast & { slide: number }) | null>(null); // last save error, for the slide it was made on (the ✓ on the button says "saved")
   const [wide, setWide] = useState(false); // laptop-sized screen: the controls go in a right-hand column
   const [dock, setDock] = useState<HTMLDivElement | null>(null); // spot at the bottom of the page on phones
@@ -104,17 +104,21 @@ export default function Page() {
   function undoStroke() {
     const next = strokes.slice(0, -1);
     setStrokes(next);
-    setBox(paintedBox(next, slideAspect.current));
+    setBoxes(paintedBoxes(next, slideAspect.current));
   }
 
   function leavePaintMode() {
     setStrokes([]);
-    setBox(null);
+    setBoxes([]);
     setPaintSlide(null);
   }
 
   function saved(signal: Signal) {
     setMine(m => [...m.filter(s => s.id !== signal.id), signal]);
+  }
+
+  function addExplanation(signalId: string, text: string) {
+    setMine(m => m.map(s => (s.id === signalId ? { ...s, explanation: text } : s)));
   }
 
   // Ask the AI about an already-saved mark. Ignores the answer if the student closed or replaced the panel.
@@ -123,7 +127,7 @@ export default function Page() {
     explainSignal(signalId)
       .then(text => {
         setExplain(e => (e?.signalId === signalId ? { ...e, status: "done", text } : e));
-        setMine(m => m.map(s => (s.id === signalId ? { ...s, explanation: text } : s)));
+        addExplanation(signalId, text);
       })
       .catch(err => {
         const text = err instanceof Error ? err.message : ""; // the API's readable reason, e.g. "AI is busy right now..."
@@ -185,21 +189,24 @@ export default function Page() {
               ))}
             </div>
             <p className="px-2 pb-1 text-gray-600">
-              {box ? "Keep painting, or save it below." : "Paint over the part you don't understand."}
+              {boxes.length ? "Keep painting, or save it below." : "Paint over the part you don't understand."}
               {pencilOnly ? " ✏️ Pencil paints; one finger scrolls." : !wide && " Pinch with 2 fingers to zoom in."}
             </p>
           </div>
-          {box && (
+          {boxes.length > 0 && (
             <RegionPanel
               key={paintSlide}
               sessionId={session.id}
               slideNumber={shown}
-              rect={box}
-              onSaved={(signal, wantsExplanation) => {
-                saved(signal);
+              rects={boxes}
+              onSaved={(signals, wantsExplanation) => {
+                signals.forEach(saved);
                 leavePaintMode();
-                if (wantsExplanation) runExplain(signal.id, signal.slideNumber);
-                else setMsg(null);
+                setMsg(null);
+                if (!wantsExplanation) return;
+                // The panel shows the first part's explanation; the others arrive as 💡 next to their boxes.
+                runExplain(signals[0].id, signals[0].slideNumber);
+                signals.slice(1).forEach(s => explainSignal(s.id).then(text => addExplanation(s.id, text)).catch(() => {}));
               }}
             />
           )}
@@ -263,10 +270,10 @@ export default function Page() {
                   brush={brush}
                   pencilOnly={pencilOnly}
                   onPencil={() => setPencilOnly(true)}
-                  onChange={(next, nextBox, aspect) => { setStrokes(next); setBox(nextBox); slideAspect.current = aspect; }}
+                  onChange={(next, nextBoxes, aspect) => { setStrokes(next); setBoxes(nextBoxes); slideAspect.current = aspect; }}
                 />
               )}
-              {box && <RectBox rect={box} className="rounded-sm border-[3px] border-dashed border-orange-600" />}
+              {boxes.map((b, i) => <RectBox key={i} rect={b} className="rounded-sm border-2 border-dashed border-orange-600" />)}
             </SlideView>
             {/* 💡 in the margin, level with each explained box (stays while painting so the slide doesn't change size) */}
             {explainedHere.length > 0 && <ExplainRail marks={explainedHere} activeId={explain?.signalId} disabled={painting} onOpen={openBox} />}

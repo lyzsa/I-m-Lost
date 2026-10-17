@@ -3,6 +3,7 @@
 // Whatever the student paints, the saved selection is the neat box around it, so the contract (Rect) doesn't change.
 // Put it inside <SlideView>, only while the student is in paint mode (so a stray thumb can't mark anything).
 // Points are 0..1 fractions of the slide, so the paint stays on the same words when resized.
+// Each separate highlighted part becomes its own box, and a stroke along a line of text is straightened into a neat bar.
 // Phones: one finger paints, two fingers pinch-zoom the page (the browser does the zooming).
 // iPad with Apple Pencil: once a pencil touches the slide, only the pencil paints and one finger scrolls the page.
 // The brush is a size on the screen, so after zooming in the same brush covers less of the slide.
@@ -15,23 +16,38 @@ export type Stroke = { r: number; points: Point[] }; // r = brush radius as a fr
 export const BRUSHES = { Thin: 8, Medium: 16, Thick: 28 } as const; // brush width in screen pixels
 const PAINT = "#facc15";
 
-// The smallest box around every painted point, grown by each stroke's brush size and kept inside the slide.
+// One box per highlighted part: each stroke gets its own box (grown by its brush size, kept inside the slide),
+// and strokes whose boxes overlap (e.g. two passes over the same words) share one box.
 // A very thin line (thin brush, a big screen, or zoomed in) still makes a box: each side is at least MIN_SIDE.
-// null only if nothing is painted.
-export function paintedBox(strokes: Stroke[], aspect: number): Rect | null {
-  if (!strokes.length) return null;
+export function paintedBoxes(strokes: Stroke[], aspect: number): Rect[] {
   const clamp = (v: number) => Math.max(0, Math.min(1, v));
-  let x1 = 1, y1 = 1, x2 = 0, y2 = 0;
-  for (const { r, points } of strokes) {
+  let boxes = strokes.map(({ r, points }) => {
     const ry = r * aspect; // aspect = slide width / height, so the brush is round in y too
-    for (const p of points) {
-      x1 = Math.min(x1, p.x - r); x2 = Math.max(x2, p.x + r);
-      y1 = Math.min(y1, p.y - ry); y2 = Math.max(y2, p.y + ry);
-    }
+    const xs = points.map(p => p.x), ys = points.map(p => p.y);
+    const [x, width] = atLeast(clamp(Math.min(...xs) - r), clamp(Math.max(...xs) + r));
+    const [y, height] = atLeast(clamp(Math.min(...ys) - ry), clamp(Math.max(...ys) + ry));
+    return { x, y, width, height };
+  });
+  // Join overlapping boxes until none overlap.
+  for (let merged = true; merged; ) {
+    merged = false;
+    outer: for (let i = 0; i < boxes.length; i++)
+      for (let j = i + 1; j < boxes.length; j++)
+        if (overlap(boxes[i], boxes[j])) {
+          boxes = [...boxes.filter((_, k) => k !== i && k !== j), union(boxes[i], boxes[j])];
+          merged = true;
+          break outer;
+        }
   }
-  const [x, width] = atLeast(clamp(x1), clamp(x2));
-  const [y, height] = atLeast(clamp(y1), clamp(y2));
-  return { x, y, width, height };
+  return boxes.sort((a, b) => a.y - b.y || a.x - b.x); // top to bottom, like reading
+}
+
+const overlap = (a: Rect, b: Rect) =>
+  a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+
+function union(a: Rect, b: Rect): Rect {
+  const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);
+  return { x, y, width: Math.max(a.x + a.width, b.x + b.width) - x, height: Math.max(a.y + a.height, b.y + b.height) - y };
 }
 
 const MIN_SIDE = 0.03; // of the slide
@@ -43,12 +59,25 @@ function atLeast(start: number, end: number): [number, number] {
   return [from, MIN_SIDE];
 }
 
+// Like a highlighter in GoodNotes: a stroke drawn roughly along a line of text becomes one straight, even bar
+// at its average height. Circles, scribbles and strokes across several lines stay as drawn.
+export function neaten(stroke: Stroke, aspect: number): Stroke {
+  const { r, points } = stroke;
+  if (points.length < 2) return stroke;
+  const xs = points.map(p => p.x), ys = points.map(p => p.y);
+  const wide = Math.max(...xs) - Math.min(...xs);
+  const tall = (Math.max(...ys) - Math.min(...ys)) / aspect; // in the same units as wide (slide widths)
+  if (wide < 3 * r || tall > Math.max(0.3 * wide, 2 * r)) return stroke; // a dot, or not along a line
+  const y = ys.reduce((sum, v) => sum + v, 0) / ys.length;
+  return { r, points: [{ x: Math.min(...xs), y }, { x: Math.max(...xs), y }] };
+}
+
 type Props = {
   strokes: Stroke[];
   brush: number;           // brush width in screen pixels
   pencilOnly: boolean;     // a pencil was used: fingers scroll instead of painting
   onPencil: () => void;    // the first time a pencil touches the slide
-  onChange: (strokes: Stroke[], box: Rect | null, aspect: number) => void; // a stroke finished
+  onChange: (strokes: Stroke[], boxes: Rect[], aspect: number) => void; // a stroke finished
 };
 
 export function PaintLayer({ strokes, brush, pencilOnly, onPencil, onChange }: Props) {
@@ -100,9 +129,9 @@ export function PaintLayer({ strokes, brush, pencilOnly, onPencil, onChange }: P
     if (!current || current.pointer !== e.pointerId) return;
     drawing.current = null;
     const c = canvas.current!;
-    const next = [...strokes, current.stroke];
     const aspect = c.clientWidth / c.clientHeight;
-    onChange(next, paintedBox(next, aspect), aspect);
+    const next = [...strokes, neaten(current.stroke, aspect)];
+    onChange(next, paintedBoxes(next, aspect), aspect);
   }
 
   return (
