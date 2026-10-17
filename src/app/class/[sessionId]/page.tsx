@@ -1,5 +1,5 @@
 "use client";
-// Student live screen (PLAN.md steps B2 to B4). Owner: Person B.
+// Student live screen (PLAN.md steps B2 to B5). Owner: Person B.
 // While `following`, the phone shows the professor's live slide. Back/Forward stop following;
 // "Back to Live" (or browsing onto the live slide) starts following again.
 // Painting only works after tapping "Point to the exact part" (paint mode), so a stray thumb can't mark anything.
@@ -7,9 +7,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { getMySignals, getSession, subscribeToSession, type Session, type Signal } from "@/lib/api";
+import { explainSignal, getMySignals, getSession, subscribeToSession, type Session, type Signal } from "@/lib/api";
 import type { Rect } from "@/lib/domain";
 import { RectBox, SlideView } from "@/components/SlideView";
+import { ExplainPanel, type Explain } from "@/features/student/ExplainPanel";
 import { LostButton } from "@/features/student/LostButton";
 import { PaintLayer, type Point } from "@/features/student/PaintLayer";
 import { RegionPanel } from "@/features/student/RegionPanel";
@@ -24,6 +25,7 @@ export default function Page() {
   const [strokes, setStrokes] = useState<Point[][]>([]);
   const [box, setBox] = useState<Rect | null>(null);
   const [note, setNote] = useState("");
+  const [explain, setExplain] = useState<Explain | null>(null);
 
   useEffect(() => {
     getSession(sessionId).then(setSession).catch(() => setSession(null));
@@ -70,6 +72,17 @@ export default function Page() {
     setMine(m => [...m.filter(s => s.id !== signal.id), signal]);
   }
 
+  // Ask the AI about an already-saved mark. Ignores the answer if the student closed or replaced the panel.
+  function runExplain(signalId: string, slideNumber: number) {
+    setExplain({ signalId, slideNumber, status: "thinking", text: "" });
+    explainSignal(signalId)
+      .then(text => {
+        setExplain(e => (e?.signalId === signalId ? { ...e, status: "done", text } : e));
+        setMine(m => m.map(s => (s.id === signalId ? { ...s, explanation: text } : s)));
+      })
+      .catch(() => setExplain(e => (e?.signalId === signalId ? { ...e, status: "error" } : e)));
+  }
+
   return (
     <main className="mx-auto max-w-3xl p-3 pb-8 md:p-6">
       <header className="mb-3 flex items-center justify-between gap-3">
@@ -106,6 +119,12 @@ export default function Page() {
         <button onClick={() => browse(shown + 1)} disabled={shown === total || painting} className="rounded-xl bg-white p-4 text-lg font-bold shadow-sm">Forward →</button>
       </nav>
 
+      {explain && (
+        <div className="mt-4">
+          <ExplainPanel explain={explain} onRetry={() => runExplain(explain.signalId, explain.slideNumber)} onClose={() => setExplain(null)} />
+        </div>
+      )}
+
       {!ended && (
         <div className="mt-4 space-y-3">
           {painting ? (
@@ -120,7 +139,12 @@ export default function Page() {
                   sessionId={session.id}
                   slideNumber={shown}
                   rect={box}
-                  onSaved={signal => { saved(signal); leavePaintMode(); setNote("Saved for later ✓ It's in My Review after class."); }}
+                  onSaved={(signal, wantsExplanation) => {
+                    saved(signal);
+                    leavePaintMode();
+                    if (wantsExplanation) runExplain(signal.id, signal.slideNumber);
+                    else setNote("Saved for later ✓ It's in My Review after class.");
+                  }}
                   onClear={erasePaint}
                 />
               )}
