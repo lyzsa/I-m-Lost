@@ -33,8 +33,9 @@ function useImageAspect(url: string): number | undefined {
   return aspect?.url === url ? aspect.value : undefined;
 }
 
-export function ZoomStage({ imageUrl, children, className = "h-[calc(100vh-15rem)] min-h-80" }: {
-  imageUrl: string; children: ReactNode; className?: string;
+// hideControls: hide the − / % / + / Fit bar (e.g. while drawing, so a pencil can't hit it; pinch still zooms).
+export function ZoomStage({ imageUrl, children, className = "h-[calc(100vh-15rem)] min-h-80", hideControls = false }: {
+  imageUrl: string; children: ReactNode; className?: string; hideControls?: boolean;
 }) {
   const aspect = useImageAspect(imageUrl);
   const area = useRef<HTMLDivElement>(null);
@@ -148,12 +149,13 @@ export function ZoomStage({ imageUrl, children, className = "h-[calc(100vh-15rem
           </div>
         </div>
       </div>
-      <div className="absolute right-3 top-3 z-20 flex items-center gap-1 rounded-xl bg-white/95 p-1 text-sm shadow">
+      {!hideControls && <div className="absolute right-3 top-3 z-20 flex select-none items-center gap-1 rounded-xl bg-white/95 p-1 text-sm shadow"
+        style={{ WebkitTouchCallout: "none" /* iPad: no Copy / Look Up menu on long press */ }}>
         <button aria-label="Zoom out" className="h-8 w-8 rounded-lg hover:bg-gray-100" disabled={zoom <= MIN_ZOOM} onClick={() => setZoom(z => clampZoom(Math.round((z - 0.25) * 4) / 4))}>−</button>
         <span className="w-12 text-center tabular-nums">{Math.round(zoom * 100)}%</span>
         <button aria-label="Zoom in" className="h-8 w-8 rounded-lg hover:bg-gray-100" disabled={zoom >= MAX_ZOOM} onClick={() => setZoom(z => clampZoom(Math.round((z + 0.25) * 4) / 4))}>+</button>
         <button className="rounded-lg px-2 py-1 hover:bg-gray-100" disabled={zoom === 1} onClick={() => setZoom(1)}>Fit</button>
-      </div>
+      </div>}
     </div>
   );
 }
