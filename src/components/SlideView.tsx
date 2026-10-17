@@ -17,13 +17,29 @@ export function SlideView({ imageUrl, alt = "Slide", className = "", children, .
   );
 }
 
+type RectBoxProps = {
+  rect: Rect;
+  className?: string;
+  onClick?: () => void; // makes the box a button (tap, click, or Enter/Space); without it, clicks pass through to the slide
+  title?: string;       // hover hint and screen-reader label for a clickable box
+  children?: ReactNode; // drawn inside the box, e.g. a small icon
+};
+
 // A box drawn from a 0..1 rect, e.g. <RectBox rect={signal.rect} className="bg-orange-500/25" />.
-export function RectBox({ rect, className = "" }: { rect: Rect; className?: string }) {
+export function RectBox({ rect, className = "", onClick, title, children }: RectBoxProps) {
+  const style = { left: `${rect.x * 100}%`, top: `${rect.y * 100}%`, width: `${rect.width * 100}%`, height: `${rect.height * 100}%` };
+  if (!onClick) return <div className={`pointer-events-none absolute ${className}`} style={style}>{children}</div>;
   return (
-    <div
-      className={`pointer-events-none absolute ${className}`}
-      style={{ left: `${rect.x * 100}%`, top: `${rect.y * 100}%`, width: `${rect.width * 100}%`, height: `${rect.height * 100}%` }}
-    />
+    <button
+      type="button"
+      title={title}
+      aria-label={title}
+      onClick={e => { e.stopPropagation(); onClick(); }}
+      className={`absolute cursor-pointer ${className}`}
+      style={style}
+    >
+      {children}
+    </button>
   );
 }
 
