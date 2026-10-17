@@ -33,4 +33,19 @@ export type Signal = {
 
 export type NewSignal = Pick<Signal, "id" | "sessionId" | "slideNumber" | "kind" | "rect" | "categories" | "otherText">;
 
+// One pen stroke the instructor drew on a slide. Saved when the pen lifts; every student sees it.
+export type Annotation = {
+  id: string;                          // made in the browser with crypto.randomUUID(); retry-safe
+  sessionId: string;
+  slideNumber: number;
+  points: { x: number; y: number }[];  // 0..1 fractions of the slide, in drawing order
+  color: string;                       // CSS colour, e.g. "#e34948"
+  width: number;                       // line width as a fraction of the slide WIDTH, e.g. 0.004
+  createdAt: string;
+};
+export type NewAnnotation = Omit<Annotation, "createdAt">;
+export type AnnotationEvent =
+  | { type: "added"; annotation: Annotation }
+  | { type: "removed"; ids: string[] };
+
 export type Unsubscribe = () => void;

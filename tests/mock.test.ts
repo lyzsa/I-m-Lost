@@ -94,3 +94,42 @@ test("students only see their own signals; explanation is saved on the signal", 
   const [saved] = await mock.getSlideSignals(mock.DEMO_SESSION_ID, 1);
   assert.equal(saved.explanation, text);
 });
+
+const stroke = (slideNumber: number, x: number) => ({
+  id: crypto.randomUUID(), sessionId: mock.DEMO_SESSION_ID, slideNumber,
+  points: [{ x, y: .2 }, { x: x + .05, y: .25 }], color: "#e34948", width: .004,
+});
+
+test("annotations: add is retry-safe; get is oldest first without removed ones; subscribe sees added and removed", async () => {
+  const events: string[] = [];
+  const stop = mock.subscribeToAnnotations(mock.DEMO_SESSION_ID, e =>
+    events.push(e.type === "added" ? `added ${e.annotation.id}` : `removed ${e.ids.join(",")}`));
+  const a = stroke(1, .1), b = stroke(1, .3), c = stroke(2, .5);
+  const savedA = await mock.addAnnotation(a);
+  const retry = await mock.addAnnotation(a); // same id again: the saved stroke comes back, nothing new
+  assert.equal(retry.createdAt, savedA.createdAt);
+  await mock.addAnnotation(b);
+  await mock.addAnnotation(c);
+  await tick();
+  assert.deepEqual((await mock.getAnnotations(mock.DEMO_SESSION_ID, 1)).map(x => x.id), [a.id, b.id]);
+  assert.deepEqual((await mock.getAnnotations(mock.DEMO_SESSION_ID, 2)).map(x => x.id), [c.id]);
+  await mock.removeAnnotations(mock.DEMO_SESSION_ID, [a.id]);
+  await tick();
+  assert.deepEqual((await mock.getAnnotations(mock.DEMO_SESSION_ID, 1)).map(x => x.id), [b.id]);
+  stop();
+  await mock.removeAnnotations(mock.DEMO_SESSION_ID, [b.id]);
+  await tick();
+  assert.deepEqual(events, [`added ${a.id}`, `added ${b.id}`, `added ${c.id}`, `removed ${a.id}`]);
+});
+
+test("annotations are validated", async () => {
+  const add = (change: object) => mock.addAnnotation({ ...stroke(1, .1), ...change });
+  await assert.rejects(add({ points: [] }), /1 to 2000 points/);
+  await assert.rejects(add({ points: Array.from({ length: 2001 }, () => ({ x: .5, y: .5 })) }), /1 to 2000 points/);
+  await assert.rejects(add({ points: [{ x: 1.2, y: .5 }] }), /outside the slide/);
+  await assert.rejects(add({ width: 0 }), /Line width/);
+  await assert.rejects(add({ width: .06 }), /Line width/);
+  await assert.rejects(add({ color: "x".repeat(21) }), /Colour/);
+  await assert.rejects(add({ slideNumber: 9 }), /doesn't exist/);
+  assert.equal((await mock.getAnnotations(mock.DEMO_SESSION_ID, 1)).length, 0);
+});
