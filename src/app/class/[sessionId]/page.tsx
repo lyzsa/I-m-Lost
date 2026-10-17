@@ -170,7 +170,7 @@ export default function Page() {
           {/* Same look as the instructor's draw toolbar (DrawToolbar), with student-sized buttons */}
           <div className="space-y-1 rounded-xl bg-white p-1.5 text-sm shadow-sm">
             <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-100 px-3 py-2 font-bold text-amber-900"><PenIcon /> Highlighting</span>
+              <span className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 font-bold text-emerald-900"><PenIcon /> Highlighting</span>
               <div className="flex items-center">
                 <button onClick={undoStroke} disabled={!strokes.length} className="rounded-lg px-2.5 py-2 hover:bg-gray-100 disabled:text-gray-400">Undo</button>
                 <span className="mx-1 h-6 w-px bg-gray-200" />
