@@ -10,10 +10,10 @@ type Props = {
   slideNumber: number;
   rect: Rect;
   onSaved: (signal: Signal) => void;
-  onCancel: () => void;
+  onClear: () => void; // erase the paint and start over
 };
 
-export function RegionPanel({ sessionId, slideNumber, rect, onSaved, onCancel }: Props) {
+export function RegionPanel({ sessionId, slideNumber, rect, onSaved, onClear }: Props) {
   const [id] = useState(() => crypto.randomUUID());
   const [picked, setPicked] = useState<Category[]>([]);
   const [saving, setSaving] = useState(false);
@@ -48,7 +48,7 @@ export function RegionPanel({ sessionId, slideNumber, rect, onSaved, onCancel }:
       </div>
       {error && <p role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-red-700">Couldn&apos;t save: {error}</p>}
       <div className="mt-3 grid grid-cols-2 gap-3">
-        <button onClick={onCancel} disabled={saving} className="rounded-xl border-2 border-gray-200 p-3 font-bold">Clear</button>
+        <button onClick={onClear} disabled={saving} className="rounded-xl border-2 border-gray-200 p-3 font-bold">Clear</button>
         <button onClick={save} disabled={saving || !picked.length} className="rounded-xl bg-emerald-900 p-3 font-bold text-white">
           {saving ? "Saving..." : error ? "Try again" : "Save for Later"}
         </button>

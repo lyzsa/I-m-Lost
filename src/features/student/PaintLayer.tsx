@@ -1,7 +1,8 @@
 "use client";
 // Finger/mouse "highlighter" on top of a slide (PLAN.md step B4; team choice: paint instead of dragging a box).
 // Whatever the student paints, the saved selection is the neat box around it, so the contract (Rect) doesn't change.
-// Put it inside <SlideView>. Points are 0..1 fractions of the slide, so the paint stays on the same words when resized.
+// Put it inside <SlideView>, only while the student is in paint mode (so a stray thumb can't mark anything).
+// Points are 0..1 fractions of the slide, so the paint stays on the same words when resized.
 import { useEffect, useRef } from "react";
 import type { Rect } from "@/lib/domain";
 import { toSlideFraction } from "@/components/SlideView";
@@ -25,25 +26,20 @@ export function paintedBox(strokes: Point[][], aspect: number): Rect | null {
 
 type Props = {
   strokes: Point[][];
-  onStart: () => void;                                   // a new stroke began
-  onChange: (strokes: Point[][], box: Rect | null) => void; // a stroke finished
-  disabled?: boolean;
+  onChange: (strokes: Point[][], box: Rect | null) => void; // called when a stroke finishes
 };
 
-export function PaintLayer({ strokes, onStart, onChange, disabled }: Props) {
+export function PaintLayer({ strokes, onChange }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const drawing = useRef<Point[] | null>(null);
 
-  function ctx() {
-    const c = canvas.current!, g = c.getContext("2d")!;
-    g.strokeStyle = PAINT;
-    g.lineWidth = R * 2 * c.width;
-    g.lineCap = g.lineJoin = "round";
-    return { g, w: c.width, h: c.height };
-  }
-
   function line(a: Point, b: Point) {
-    const { g, w, h } = ctx();
+    const c = canvas.current;
+    if (!c) return; // paint mode just closed
+    const g = c.getContext("2d")!, w = c.width, h = c.height;
+    g.strokeStyle = PAINT;
+    g.lineWidth = R * 2 * w;
+    g.lineCap = g.lineJoin = "round";
     g.beginPath();
     g.moveTo(a.x * w, a.y * h);
     g.lineTo(b.x * w + (a === b ? 0.1 : 0), b.y * h); // a === b draws a dot
@@ -78,13 +74,12 @@ export function PaintLayer({ strokes, onStart, onChange, disabled }: Props) {
     <canvas
       ref={canvas}
       aria-label="Paint over the part you don't understand"
-      className={`absolute inset-0 h-full w-full touch-none opacity-[.55] ${disabled ? "pointer-events-none" : "cursor-crosshair"}`}
+      className="absolute inset-0 h-full w-full cursor-crosshair touch-none opacity-[.55]"
       onPointerDown={e => {
         e.preventDefault();
         e.currentTarget.setPointerCapture(e.pointerId);
         const p = toSlideFraction(e, e.currentTarget);
         drawing.current = [p];
-        onStart();
         line(p, p);
       }}
       onPointerMove={e => {
