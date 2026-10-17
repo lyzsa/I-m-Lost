@@ -43,7 +43,7 @@ export function LostButton({ sessionId, slideNumber, done, onSaved }: Props) {
         {state === "error" ? `Couldn't save: ${message}`
           : message ? message
           : state === "saved" ? "Saved. Your professor sees the count, never your name."
-          : "Tap if this slide lost you."}
+          : "Lost on the whole slide? One tap."}
       </p>
     </div>
   );

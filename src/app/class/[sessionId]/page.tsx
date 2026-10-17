@@ -2,7 +2,7 @@
 // Student live screen (PLAN.md steps B2 to B4). Owner: Person B.
 // While `following`, the phone shows the professor's live slide. Back/Forward stop following;
 // "Back to Live" (or browsing onto the live slide) starts following again.
-// Painting only works after tapping "Mark the confusing part" (paint mode), so a stray thumb can't mark anything.
+// Painting only works after tapping "Point to the exact part" (paint mode), so a stray thumb can't mark anything.
 // In paint mode the slide is held still, so the mark can't land on the wrong slide.
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -139,7 +139,7 @@ export default function Page() {
                 onClick={() => { setPaintSlide(shown); setNote(""); }}
                 className="w-full rounded-xl border-2 border-emerald-900 bg-white p-4 text-xl font-bold text-emerald-900"
               >
-                ✍️ Mark the confusing part
+                ✍️ Point to the exact part
               </button>
             </>
           )}
