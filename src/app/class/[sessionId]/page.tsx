@@ -14,6 +14,7 @@ import { ExplainPanel, type Explain } from "@/features/student/ExplainPanel";
 import { LostButton } from "@/features/student/LostButton";
 import { PaintLayer, type Point } from "@/features/student/PaintLayer";
 import { RegionPanel } from "@/features/student/RegionPanel";
+import { HomeLogo } from "@/features/professor/HomeLogo"; // shared with the professor screens so the logo matches
 
 export default function Page() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -38,7 +39,8 @@ export default function Page() {
   if (session === null)
     return (
       <main className="mx-auto max-w-md p-8 text-center">
-        <h1 className="text-2xl font-bold">Class not found</h1>
+        <HomeLogo />
+        <h1 className="mt-6 text-2xl font-bold">Class not found</h1>
         <Link href="/join" className="mt-6 inline-block rounded-xl bg-emerald-900 px-6 py-3 text-white">Join another class</Link>
       </main>
     );
@@ -85,8 +87,9 @@ export default function Page() {
 
   return (
     <main className="mx-auto max-w-3xl p-3 pb-8 md:p-6">
-      <header className="mb-3 flex items-center justify-between gap-3">
-        <h1 className="truncate text-lg font-bold">{session.title}</h1>
+      <header className="mb-3 flex items-center gap-3">
+        <HomeLogo />
+        <h1 className="min-w-0 flex-1 truncate text-lg font-bold">{session.title}</h1>
         <span className="shrink-0 text-sm text-gray-600">Slide {shown} / {total}</span>
       </header>
 
