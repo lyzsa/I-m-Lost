@@ -93,7 +93,7 @@ export default function HostLivePage() {
       {/* minmax(0,1fr): never let a large slide image push the side panel off screen */}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0">
-          <ZoomStage imageUrl={slide.imageUrl}>
+          <ZoomStage imageUrl={slide.imageUrl} hideControls={drawing}>
             <SlideView
               imageUrl={slide.imageUrl}
               alt={`Slide ${slide.number}`}
