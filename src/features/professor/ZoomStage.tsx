@@ -1,15 +1,25 @@
 "use client";
 // A fixed-size viewing area for a slide. The slide always fits inside it (any page shape: 16:9, 4:3, portrait A4),
 // so the rest of the page never changes size. Zoom with the buttons, or pinch / Ctrl+scroll on a trackpad;
-// when zoomed in, scroll to move around. Overlays drawn in 0..1 fractions zoom along with the slide.
+// when zoomed in, drag or scroll to move around. In Draw mode on touchscreens, DrawLayer moves/zooms it via useZoomStage(). Overlays drawn in 0..1 fractions zoom along with the slide.
 // Usage: <ZoomStage imageUrl={slide.imageUrl}><SlideView imageUrl={slide.imageUrl}>...</SlideView></ZoomStage>
 // (B can reuse this on the student screen; pass className to change the area's height.)
-import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from "react";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 4;
 const PAD = 24; // breathing room inside the area, px
 const clampZoom = (z: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round(z * 100) / 100));
+const clampZoomSmooth = (z: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z)); // for pinch: tiny steps must add up
+
+// Lets something drawn inside the stage move or zoom it (e.g. two-finger gestures while drawing, where the
+// browser's own scrolling is switched off). null outside a ZoomStage.
+export type ZoomStageApi = {
+  panBy: (dx: number, dy: number) => void;                         // move the slide with the finger, in px
+  zoomAt: (factor: number, clientX: number, clientY: number) => void; // zoom, keeping that screen point still
+};
+const StageContext = createContext<ZoomStageApi | null>(null);
+export const useZoomStage = () => useContext(StageContext);
 
 // Width / height of an image, once it has loaded.
 function useImageAspect(url: string): number | undefined {
@@ -30,6 +40,34 @@ export function ZoomStage({ imageUrl, children, className = "h-[calc(100vh-15rem
   const area = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ width: number; height: number }>();
   const [zoom, setZoom] = useState(1);
+  const content = useRef<HTMLDivElement>(null);
+  const anchor = useRef<{ fx: number; fy: number; cx: number; cy: number } | null>(null);
+
+  const api = useMemo<ZoomStageApi>(() => ({
+    panBy(dx, dy) {
+      const el = area.current;
+      if (!el) return;
+      el.scrollLeft -= dx;
+      el.scrollTop -= dy;
+    },
+    zoomAt(factor, clientX, clientY) {
+      const c = content.current;
+      if (!c) return;
+      const r = c.getBoundingClientRect();
+      anchor.current = { fx: (clientX - r.left) / r.width, fy: (clientY - r.top) / r.height, cx: clientX, cy: clientY };
+      setZoom(z => clampZoomSmooth(z * factor));
+    },
+  }), []);
+
+  // After a zoom around a point, scroll so that point is back under the fingers.
+  useLayoutEffect(() => {
+    const a = anchor.current, c = content.current, el = area.current;
+    if (!a || !c || !el) return;
+    anchor.current = null;
+    const r = c.getBoundingClientRect();
+    el.scrollLeft += r.left + a.fx * r.width - a.cx;
+    el.scrollTop += r.top + a.fy * r.height - a.cy;
+  }, [zoom]);
 
   // Track the area's size so the slide can be fitted into it.
   useEffect(() => {
@@ -105,13 +143,15 @@ export function ZoomStage({ imageUrl, children, className = "h-[calc(100vh-15rem
         onClickCapture={e => { if (justDragged.current) { e.stopPropagation(); e.preventDefault(); } }}
       >
         <div className="flex items-center justify-center p-3" style={{ minWidth: "100%", minHeight: "100%", width: "max-content" }}>
-          <div style={{ width: fitWidth * zoom, visibility: fitWidth ? "visible" : "hidden" }}>{children}</div>
+          <div ref={content} style={{ width: fitWidth * zoom, visibility: fitWidth ? "visible" : "hidden" }}>
+            <StageContext.Provider value={api}>{children}</StageContext.Provider>
+          </div>
         </div>
       </div>
       <div className="absolute right-3 top-3 z-20 flex items-center gap-1 rounded-xl bg-white/95 p-1 text-sm shadow">
-        <button aria-label="Zoom out" className="h-8 w-8 rounded-lg hover:bg-gray-100" disabled={zoom <= MIN_ZOOM} onClick={() => setZoom(z => clampZoom(z - 0.25))}>−</button>
+        <button aria-label="Zoom out" className="h-8 w-8 rounded-lg hover:bg-gray-100" disabled={zoom <= MIN_ZOOM} onClick={() => setZoom(z => clampZoom(Math.round((z - 0.25) * 4) / 4))}>−</button>
         <span className="w-12 text-center tabular-nums">{Math.round(zoom * 100)}%</span>
-        <button aria-label="Zoom in" className="h-8 w-8 rounded-lg hover:bg-gray-100" disabled={zoom >= MAX_ZOOM} onClick={() => setZoom(z => clampZoom(z + 0.25))}>+</button>
+        <button aria-label="Zoom in" className="h-8 w-8 rounded-lg hover:bg-gray-100" disabled={zoom >= MAX_ZOOM} onClick={() => setZoom(z => clampZoom(Math.round((z + 0.25) * 4) / 4))}>+</button>
         <button className="rounded-lg px-2 py-1 hover:bg-gray-100" disabled={zoom === 1} onClick={() => setZoom(1)}>Fit</button>
       </div>
     </div>
