@@ -44,7 +44,7 @@ export function LostButton({ sessionId, slideNumber, done, onSaved, onStatus, cl
       title="The whole slide lost me"
       className={`bg-emerald-900 font-bold text-white ${className}`}
     >
-      {state === "saving" ? "Saving..." : state === "error" ? "Try again" : state === "saved" ? "I'm Lost ✓" : "I'm Lost"}
+      {state === "saving" ? "Saving..." : state === "error" ? "Try again" : state === "saved" || done ? "I'm Lost ✓" : "I'm Lost"}
     </button>
   );
 }

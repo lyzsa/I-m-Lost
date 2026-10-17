@@ -33,9 +33,9 @@ export function FloatingActions({ children, toast }: { children: ReactNode; toas
     setPlace({ side: saved?.side ?? "right", y: Math.max(EDGE, Math.min(window.innerHeight - h - EDGE, y)) });
   }, []);
 
-  // Show each new message for a few seconds.
+  // Show each new message for a few seconds (toast.id is the time it was made, so old ones don't pop up again).
   useEffect(() => {
-    if (!toast) return;
+    if (!toast || Date.now() - toast.id > 3500) return;
     setShown(toast);
     const timer = setTimeout(() => setShown(s => (s?.id === toast.id ? null : s)), 3500);
     return () => clearTimeout(timer);
