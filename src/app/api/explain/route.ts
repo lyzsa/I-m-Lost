@@ -1,6 +1,6 @@
 // POST /api/explain  {signalId}  ->  {explanation}   (TASKS.md step C4, used by Explain Now)
 // Reads the saved signal and its slide, asks Gemini, stores the answer on the signal.
-import { EXPLAIN_SYSTEM, SIGNAL_COLUMNS, ask, db, describeMark, errorResponse, imageBudget, slideImage, slideText, type SignalRow, type SlideRow } from "../ai";
+import { EXPLAIN_SYSTEM, SIGNAL_COLUMNS, ask, db, describeMark, errorResponse, imageBudget, slideImages, slideText, type SignalRow, type SlideRow } from "../ai";
 
 export const maxDuration = 60;
 
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     const explanation = await ask(EXPLAIN_SYSTEM, [
       { type: "text", text: `${slideText(slide)}\nWhat the student marked: ${describeMark(signal)}` },
-      ...(await slideImage(slide.image_url, imageBudget())),
+      ...(await slideImages(slide.image_url, [signal], imageBudget())),
     ]);
 
     const { error: saveError } = await supabase.from("signals").update({ explanation }).eq("id", signalId);
