@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getAnnotations, getSession, getSlideSignals, type Annotation, type Session, type Signal } from "@/lib/api";
-import { categories, type Category } from "@/lib/domain";
 import { SlideView } from "@/components/SlideView";
 import { AnnotationLayer } from "@/features/annotations/AnnotationLayer";
 import { ClusterOutlines } from "@/features/professor/DenseAreaLayer";
@@ -22,22 +21,6 @@ function Responses({ answers }: { answers: string[] }) {
     <ul className="mt-2 grid gap-2 md:grid-cols-2">
       {answers.map((a, k) => (
         <li key={k} className="rounded-lg border bg-white px-3 py-2 text-sm italic">&ldquo;{a}&rdquo;</li>
-      ))}
-    </ul>
-  );
-}
-
-function ReasonBars({ values }: { values: Record<Category, number> }) {
-  const shown = categories.filter(c => values[c] > 0).sort((a, b) => values[b] - values[a]);
-  const max = Math.max(1, ...shown.map(c => values[c]));
-  return (
-    <ul className="mt-1.5 space-y-1 text-sm">
-      {shown.map(c => (
-        <li key={c} className="grid grid-cols-[11rem_1fr_2rem] items-center gap-2">
-          <span>{c}</span>
-          <span className="h-2 rounded-full bg-gray-100"><span className="block h-2 rounded-full bg-orange-400" style={{ width: `${(values[c] / max) * 100}%` }} /></span>
-          <b className="text-right">{values[c]}</b>
-        </li>
       ))}
     </ul>
   );
@@ -75,7 +58,7 @@ function SlideSummary({ slide, signals, strokes, threshold }: {
             {s.boxes > 0 && (
               <section className="mt-3">
                 <h3 className="text-sm font-bold">Whole slide: why students marked it</h3>
-                <ReasonBars values={s.categories} />
+                <div className="mt-2"><ReasonPie values={s.categories} /></div>
               </section>
             )}
 
