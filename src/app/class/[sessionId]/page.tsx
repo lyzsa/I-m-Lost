@@ -16,11 +16,20 @@ import { ExplainRail } from "@/features/student/ExplainRail";
 import { InstructorInk } from "@/features/student/InstructorInk";
 import { FloatingActions, type Toast } from "@/features/student/FloatingActions";
 import { LostButton } from "@/features/student/LostButton";
-import { BRUSH_MAX, BRUSH_MIN, PaintLayer, paintedBox, type Stroke } from "@/features/student/PaintLayer";
+import { BRUSHES, PaintLayer, paintedBox, type Stroke } from "@/features/student/PaintLayer";
 import { RegionPanel } from "@/features/student/RegionPanel";
 import { SlideStrip } from "@/features/student/SlideStrip";
 import { rememberClass } from "@/features/student/lastClass";
 import { HomeLogo } from "@/features/professor/HomeLogo"; // shared with the professor screens so the logo matches
+
+// The same pen drawing the instructor's toolbar uses, so both screens look alike.
+function PenIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+      <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
 
 export default function Page() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -30,11 +39,11 @@ export default function Page() {
   const [mine, setMine] = useState<Signal[]>([]); // this student's own feedback
   const [paintSlide, setPaintSlide] = useState<number | null>(null); // set while in paint mode: the slide being marked
   const [strokes, setStrokes] = useState<Stroke[]>([]);
-  const [brush, setBrush] = useState(14); // brush width in screen pixels
+  const [brush, setBrush] = useState<number>(BRUSHES.Medium); // brush width in screen pixels
   const [pencilOnly, setPencilOnly] = useState(false); // an Apple Pencil was used: fingers scroll, only the pencil paints
   const slideAspect = useRef(16 / 9); // the slide's width / height, from the paint layer (for undo)
   const [box, setBox] = useState<Rect | null>(null);
-  const [msg, setMsg] = useState<(Toast & { slide: number }) | null>(null); // last save message, for the slide it was made on
+  const [msg, setMsg] = useState<(Toast & { slide: number }) | null>(null); // last save error, for the slide it was made on (the ✓ on the button says "saved")
   const [wide, setWide] = useState(false); // laptop-sized screen: the controls go in a right-hand column
   const [dock, setDock] = useState<HTMLDivElement | null>(null); // spot at the bottom of the page on phones
   const [docked, setDocked] = useState(false); // phone scrolled to the bottom: buttons sit in the page instead of floating
@@ -134,7 +143,7 @@ export default function Page() {
       slideNumber={shown}
       done={mine.some(s => s.kind === "lost" && s.slideNumber === shown)}
       onSaved={saved}
-      onStatus={(text, error) => setMsg({ id: Date.now(), slide: shown, text, error })}
+      onStatus={(text, error) => setMsg(error ? { id: Date.now(), slide: shown, text, error } : null)}
       className={className}
     />
   );
@@ -158,32 +167,27 @@ export default function Page() {
       {explain && <ExplainPanel explain={explain} onExplain={() => runExplain(explain.signalId, explain.slideNumber)} onClose={() => setExplain(null)} />}
       {painting && (
         <>
-          <div className="space-y-2 rounded-xl bg-amber-100 p-3">
-            <div className="flex items-center justify-between gap-3">
-              <span>{box ? "Keep painting, or save it below." : "✍️ Paint over the part you don't understand."}</span>
-              <div className="flex shrink-0 gap-2">
-                <button onClick={undoStroke} disabled={!strokes.length} className="rounded-lg bg-white px-3 py-2 font-bold">↶ Undo</button>
-                <button onClick={leavePaintMode} className="rounded-lg bg-white px-3 py-2 font-bold">Cancel</button>
+          {/* Same look as the instructor's draw toolbar (DrawToolbar), with student-sized buttons */}
+          <div className="space-y-1 rounded-xl bg-white p-1.5 text-sm shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 font-bold text-emerald-900"><PenIcon /> Highlighting</span>
+              <div className="flex items-center">
+                <button onClick={undoStroke} disabled={!strokes.length} className="rounded-lg px-2.5 py-2 hover:bg-gray-100 disabled:text-gray-400">Undo</button>
+                <span className="mx-1 h-6 w-px bg-gray-200" />
+                <button onClick={leavePaintMode} className="rounded-lg px-2.5 py-2 text-red-800 hover:bg-red-50">Cancel</button>
               </div>
             </div>
-            <label className="flex items-center gap-3 text-sm">
-              <span>Brush</span>
-              <input
-                type="range"
-                min={BRUSH_MIN}
-                max={BRUSH_MAX}
-                value={brush}
-                onChange={e => setBrush(Number(e.target.value))}
-                aria-label="Brush size"
-                className="min-w-0 flex-1 accent-emerald-900"
-              />
-              <span className="grid h-10 w-10 shrink-0 place-items-center" aria-hidden>
-                <span className="rounded-full bg-yellow-400" style={{ width: brush, height: brush }} />
-              </span>
-            </label>
-            {pencilOnly
-              ? <p className="text-sm text-gray-600">✏️ Pencil paints. Use one finger to scroll.</p>
-              : !wide && <p className="text-sm text-gray-600">Pinch with 2 fingers to zoom in.</p>}
+            <div className="flex items-center gap-1 px-1">
+              <span className="mr-1 text-gray-600">Brush</span>
+              {Object.entries(BRUSHES).map(([name, size]) => (
+                <button key={name} onClick={() => setBrush(size)} aria-label={`${name} brush`} aria-pressed={brush === size}
+                  className={`rounded-lg px-2.5 py-2 ${brush === size ? "bg-gray-900 text-white" : "hover:bg-gray-100"}`}>{name}</button>
+              ))}
+            </div>
+            <p className="px-2 pb-1 text-gray-600">
+              {box ? "Keep painting, or save it below." : "Paint over the part you don't understand."}
+              {pencilOnly ? " ✏️ Pencil paints; one finger scrolls." : !wide && " Pinch with 2 fingers to zoom in."}
+            </p>
           </div>
           {box && (
             <RegionPanel
@@ -195,7 +199,7 @@ export default function Page() {
                 saved(signal);
                 leavePaintMode();
                 if (wantsExplanation) runExplain(signal.id, signal.slideNumber);
-                else setMsg({ id: Date.now(), slide: signal.slideNumber, text: "Saved for later ✓ It's in My Review after class.", error: false });
+                else setMsg(null);
               }}
             />
           )}
