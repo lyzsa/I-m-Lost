@@ -6,9 +6,10 @@
 // Each separate highlighted part becomes its own box, and a stroke along a line of text is straightened into a neat bar.
 // Eraser: while `erasing` (or with a pen's eraser end), touching a stroke removes the whole stroke.
 // Phones: one finger paints, two fingers pinch-zoom the page (the browser does the zooming).
-// iPad with Apple Pencil: once a pencil touches the slide, only the pencil paints and one finger scrolls the page.
+// iPad with Apple Pencil: once a pencil touches the slide, only the pencil paints; fingers scroll and pinch-zoom the page
+// like anywhere else in Safari (with momentum), even while the other hand is writing. Other pens: one finger scrolls.
 // The brush is a size on the screen, so after zooming in the same brush covers less of the slide.
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Rect } from "@/lib/domain";
 import { toSlideFraction } from "@/components/SlideView";
 
@@ -82,6 +83,9 @@ type Props = {
   onChange: (strokes: Stroke[], boxes: Rect[], aspect: number) => void; // a stroke finished
 };
 
+// Set once Safari reports an Apple Pencil touch (touchType "stylus"); kept for the rest of the visit.
+let applePencil = false;
+
 export function PaintLayer({ strokes, brush, pencilOnly, erasing, onPencil, onChange }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const drawing = useRef<{ pointer: number; stroke: Stroke } | null>(null);
@@ -89,6 +93,20 @@ export function PaintLayer({ strokes, brush, pencilOnly, erasing, onPencil, onCh
   const rubbing = useRef<{ pointer: number; last: Point } | null>(null); // the pointer that is erasing, and where it was
   const live = useRef(strokes); // strokes left after erasing, before the parent re-renders
   live.current = strokes;
+  const [nativeFingers, setNativeFingers] = useState(applePencil); // fingers scroll/zoom the page the browser's own way
+
+  // Apple Pencil: stop the pencil from ever scrolling or zooming the page, so fingers can be left to the browser.
+  useEffect(() => {
+    const c = canvas.current!;
+    const pencil = (e: TouchEvent) => {
+      if (![...e.changedTouches].some(t => (t as Touch & { touchType?: string }).touchType === "stylus")) return;
+      e.preventDefault();
+      if (!applePencil) { applePencil = true; setNativeFingers(true); }
+    };
+    c.addEventListener("touchstart", pencil, { passive: false });
+    c.addEventListener("touchmove", pencil, { passive: false });
+    return () => { c.removeEventListener("touchstart", pencil); c.removeEventListener("touchmove", pencil); };
+  }, []);
 
   function line(r: number, a: Point, b: Point) {
     const c = canvas.current;
@@ -160,12 +178,13 @@ export function PaintLayer({ strokes, brush, pencilOnly, erasing, onPencil, onCh
     <canvas
       ref={canvas}
       aria-label="Paint over the part you don't understand"
-      // pinch-zoom: two fingers still zoom the page; one finger never scrolls it on its own (it paints, or we scroll in pencil mode)
-      className={`absolute inset-0 h-full w-full opacity-[.55] [touch-action:pinch-zoom] ${erasing ? "cursor-cell" : "cursor-crosshair"}`}
+      // pinch-zoom: two fingers zoom the page, one finger paints (or scrolls in pencil mode). Apple Pencil mode: manipulation, fingers are all the browser's
+      className={`absolute inset-0 h-full w-full opacity-[.55] ${pencilOnly && nativeFingers ? "touch-manipulation" : "[touch-action:pinch-zoom]"} ${erasing ? "cursor-cell" : "cursor-crosshair"}`}
       onPointerDown={e => {
         if (e.pointerType === "pen" && !pencilOnly) onPencil();
         if (pencilOnly && e.pointerType === "touch") {
-          scrolling.current = { pointer: e.pointerId, x: e.clientX, y: e.clientY }; // finger scrolls in pencil mode
+          // finger in pencil mode: the browser scrolls (Apple Pencil), or we scroll for it (other pens)
+          if (!nativeFingers) scrolling.current = { pointer: e.pointerId, x: e.clientX, y: e.clientY };
           return;
         }
         if (drawing.current) { dropStroke(); return; }
