@@ -5,7 +5,8 @@ import { useParams } from "next/navigation";
 import { getSession, getSlideSignals, type Session, type Signal } from "@/lib/api";
 import { categories } from "@/lib/domain";
 import { HomeLogo } from "@/features/professor/HomeLogo";
-import { slideStats } from "@/features/professor/stats";
+import { OtherResponsesModal, ViewResponsesButton, type ResponsesView } from "@/features/professor/OtherResponses";
+import { otherAnswers, slideStats } from "@/features/professor/stats";
 
 type Loaded = { session: Session; bySlide: Signal[][] };
 const plural = (n: number, word: string) => `${word}${n === 1 ? "" : "s"}`;
@@ -14,6 +15,7 @@ export default function SummaryPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const [data, setData] = useState<Loaded | null>(); // undefined = loading, null = not found
   const [error, setError] = useState("");
+  const [responses, setResponses] = useState<ResponsesView>();
 
   useEffect(() => {
     let active = true;
@@ -65,12 +67,15 @@ export default function SummaryPage() {
                     ))}
                   </ul>
                 )}
+                <ViewResponsesButton count={otherAnswers(bySlide[i]).length} className="mt-3 text-sm"
+                  onClick={() => setResponses({ title: `Slide ${slide.number}`, answers: otherAnswers(bySlide[i]) })} />
                 {s.lost + s.boxes === 0 && <p className="mt-1 text-sm text-gray-500">No feedback on this slide.</p>}
               </div>
             </li>
           );
         })}
       </ol>
+      {responses && <OtherResponsesModal view={responses} onClose={() => setResponses(undefined)} />}
     </main>
   );
 }

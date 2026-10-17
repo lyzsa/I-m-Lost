@@ -11,6 +11,7 @@ import { HeatmapLayer } from "@/features/professor/HeatmapLayer";
 import { HomeLogo } from "@/features/professor/HomeLogo";
 import { JoinCard } from "@/features/professor/JoinCard";
 import { LiveControls } from "@/features/professor/LiveControls";
+import { OtherResponsesModal, type ResponsesView } from "@/features/professor/OtherResponses";
 import { rememberClass } from "@/features/professor/myClasses";
 import { SlideNav } from "@/features/professor/SlideNav";
 import { SpotPopup } from "@/features/professor/SpotPopup";
@@ -29,6 +30,7 @@ export default function HostLivePage() {
   const [spotChoice, setSpotChoice] = useState<{ key: string; spot: Spot }>();
   const [hover, setHover] = useState<Spot>(); // where the mouse is over the slide (no hover on touch screens)
   const [threshold, setThreshold] = useState(2); // a "dense area" needs at least this many different students
+  const [responses, setResponses] = useState<ResponsesView>(); // the large "Other" responses window, when open
   const areas = useMemo(() => findDenseAreas(signals, threshold), [signals, threshold]);
 
   useEffect(() => {
@@ -80,7 +82,10 @@ export default function HostLivePage() {
               onPointerLeave={() => setHover(undefined)}
             >
               {showHeat && <HeatmapLayer signals={signals} />}
-              {showHeat && <DenseAreaLayer areas={areas} />}
+              {showHeat && (
+                <DenseAreaLayer areas={areas}
+                  onOpenResponses={(n, answers) => setResponses({ title: `Slide ${slide.number} · dense area ${n}`, answers })} />
+              )}
               {showHeat && hover && <SpotPopup signals={signals} spot={hover} />}
               {spot && (
                 <div
@@ -117,12 +122,14 @@ export default function HostLivePage() {
           <JoinCard sessionId={session.id} code={session.code} />
           <LiveControls session={session} onChange={setSession} />
           {showHeat ? (
-            <StatsPanel signals={signals} spot={spot} onClearSpot={() => setSpotChoice(undefined)} />
+            <StatsPanel signals={signals} spot={spot} onClearSpot={() => setSpotChoice(undefined)}
+              onOpenOther={(where, answers) => setResponses({ title: `Slide ${slide.number} · ${where}`, answers })} />
           ) : (
             <p className="px-2 text-sm text-gray-500">Feedback is hidden in clean view. Use &quot;Show heatmap&quot; to see it.</p>
           )}
         </aside>
       </div>
+      {responses && <OtherResponsesModal view={responses} onClose={() => setResponses(undefined)} />}
     </main>
   );
 }

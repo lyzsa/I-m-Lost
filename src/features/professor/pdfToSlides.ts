@@ -1,15 +1,40 @@
 // Turns a PDF into one PNG image + the page's text per slide. Browser only (uses <canvas>).
-// The pdf.js worker is served from public/pdf.worker.min.mjs. If pdfjs-dist is ever upgraded, copy the new one:
-//   cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/
+// Uses pdf.js's "legacy" build: the normal build needs very new JavaScript features that Safari (and every browser
+// on iPhone/iPad) lacks, which made uploads fail there. The worker is public/pdfjs/worker.mjs (legacy build + the
+// same Safari fix). If pdfjs-dist is upgraded, copy the new worker:
+//   cp node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs public/pdfjs/pdf.worker.legacy.min.mjs
 export type SlideInput = { image: Blob; text: string };
 
 export const MAX_PAGES = 20;
 const MAX_WIDTH_PX = 2000;
 export const CANCELLED = "Upload cancelled";
 
+// Safari can't loop over a ReadableStream with `for await`; pdf.js does (when reading page text). Add the missing piece.
+// Same fix as public/pdfjs/readable-stream-iterator.mjs, which does this inside the worker.
+function fixSafariStreams() {
+  if (typeof ReadableStream === "undefined" || Symbol.asyncIterator in ReadableStream.prototype) return;
+  Object.defineProperty(ReadableStream.prototype, Symbol.asyncIterator, {
+    configurable: true,
+    writable: true,
+    value: async function* (this: ReadableStream) {
+      const reader = this.getReader();
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) return;
+          yield value;
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    },
+  });
+}
+
 async function openPdf(file: File) {
-  const pdfjs = await import("pdfjs-dist"); // loaded here, not at the top, so it never runs on the server
-  pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+  fixSafariStreams();
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs"); // loaded here, not at the top, so it never runs on the server
+  pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/worker.mjs";
   const loading = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
   try {
     return { loading, pdf: await loading.promise };
