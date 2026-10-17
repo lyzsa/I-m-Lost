@@ -1,9 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getSession, subscribeToSession, type Session } from "@/lib/api";
 import { SlideView, toSlideFraction } from "@/components/SlideView";
+import { DenseAreaLayer } from "@/features/professor/DenseAreaLayer";
+import { findDenseAreas } from "@/features/professor/denseAreas";
 import { HeatmapLayer } from "@/features/professor/HeatmapLayer";
 import { HomeLogo } from "@/features/professor/HomeLogo";
 import { JoinCard } from "@/features/professor/JoinCard";
@@ -22,6 +24,8 @@ export default function HostLivePage() {
   // The spot the professor clicked on the heatmap; like the toggle, it only lasts for the current slide + phase.
   const [spotChoice, setSpotChoice] = useState<{ key: string; spot: Spot }>();
   const [hover, setHover] = useState<Spot>(); // where the mouse is over the slide (no hover on touch screens)
+  const [threshold, setThreshold] = useState(2); // a "dense area" needs at least this many different students
+  const areas = useMemo(() => findDenseAreas(signals, threshold), [signals, threshold]);
 
   useEffect(() => {
     let active = true;
@@ -66,6 +70,7 @@ export default function HostLivePage() {
             onPointerLeave={() => setHover(undefined)}
           >
             {showHeat && <HeatmapLayer signals={signals} />}
+            {showHeat && <DenseAreaLayer areas={areas} />}
             {showHeat && hover && <SpotPopup signals={signals} spot={hover} />}
             {spot && (
               <div
@@ -81,6 +86,16 @@ export default function HostLivePage() {
             {showHeat && (
               <span className="text-sm text-gray-600">
                 {boxCount ? `${boxCount} ${boxCount === 1 ? "box" : "boxes"} on this slide · darker = more overlap` : "No boxes on this slide yet"}
+              </span>
+            )}
+            {showHeat && boxCount > 0 && (
+              <span className="flex items-center gap-2 rounded-xl bg-white px-3 py-1.5 text-sm">
+                Dense areas: at least
+                <button aria-label="Lower threshold" className="h-7 w-7 rounded-lg bg-gray-100" disabled={threshold <= 1} onClick={() => setThreshold(t => t - 1)}>−</button>
+                <b className="w-4 text-center">{threshold}</b>
+                <button aria-label="Raise threshold" className="h-7 w-7 rounded-lg bg-gray-100" disabled={threshold >= 9} onClick={() => setThreshold(t => t + 1)}>+</button>
+                {threshold === 1 ? "student" : "students"} on the same spot
+                <span className="text-gray-500">· {areas.length ? `${areas.length} found` : "none yet"}</span>
               </span>
             )}
           </div>
