@@ -11,6 +11,7 @@ import { explainSignal, getMySignals, getSession, subscribeToSession, type Sessi
 import type { Rect } from "@/lib/domain";
 import { RectBox, SlideView } from "@/components/SlideView";
 import { ExplainPanel, type Explain } from "@/features/student/ExplainPanel";
+import { FloatingActions, type Toast } from "@/features/student/FloatingActions";
 import { LostButton } from "@/features/student/LostButton";
 import { PaintLayer, type Point } from "@/features/student/PaintLayer";
 import { RegionPanel } from "@/features/student/RegionPanel";
@@ -25,7 +26,7 @@ export default function Page() {
   const [paintSlide, setPaintSlide] = useState<number | null>(null); // set while in paint mode: the slide being marked
   const [strokes, setStrokes] = useState<Point[][]>([]);
   const [box, setBox] = useState<Rect | null>(null);
-  const [status, setStatus] = useState<{ slide: number; text: string; error: boolean } | null>(null); // shown only on its own slide
+  const [toast, setToast] = useState<Toast | null>(null); // short message shown next to the floating buttons
   const [explain, setExplain] = useState<Explain | null>(null);
 
   useEffect(() => {
@@ -123,11 +124,33 @@ export default function Page() {
 
       {following && !painting && !ended && <p className="mt-3 text-center text-sm text-gray-500">Following the professor live</p>}
 
-      {/* Floating feedback bar: sticks to the bottom of the screen, so a tall slide never pushes the buttons out of reach. */}
-      {(!ended || explain) && (
+      {/* Floating round buttons on the side; the student can drag them out of the way. Hidden while a sheet is open. */}
+      {!ended && !painting && !explain && (
+        <FloatingActions toast={toast}>
+          <LostButton
+            key={shown}
+            sessionId={session.id}
+            slideNumber={shown}
+            done={mine.some(s => s.kind === "lost" && s.slideNumber === shown)}
+            onSaved={saved}
+            onStatus={(text, error) => setToast({ id: Date.now(), text, error })}
+            className="grid h-20 w-20 place-items-center rounded-full p-2 text-base leading-tight shadow-lg"
+          />
+          <button
+            onClick={() => setPaintSlide(shown)}
+            title="Point to the exact part you don't understand"
+            className="grid h-16 w-16 place-items-center rounded-full border-2 border-emerald-900 bg-white text-sm font-bold leading-tight text-emerald-900 shadow-lg"
+          >
+            <span><span className="text-xl">✍️</span><br />Point</span>
+          </button>
+        </FloatingActions>
+      )}
+
+      {/* Bottom sheet, only while it's needed: picking reasons after painting, or reading an explanation. */}
+      {(painting || explain) && (
         <div className="sticky bottom-0 z-10 -mx-3 mt-4 space-y-3 border-t border-gray-200 bg-[#f3f5f2]/95 px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur md:-mx-6 md:px-6">
           {explain && <ExplainPanel explain={explain} onRetry={() => runExplain(explain.signalId, explain.slideNumber)} onClose={() => setExplain(null)} />}
-          {ended ? null : painting ? (
+          {painting && (
             <>
               <div className="flex items-center justify-between gap-3 rounded-xl bg-amber-100 p-3">
                 <span>{box ? "Now pick why it's confusing." : "✍️ Paint over the part you don't understand."}</span>
@@ -143,33 +166,11 @@ export default function Page() {
                     saved(signal);
                     leavePaintMode();
                     if (wantsExplanation) runExplain(signal.id, signal.slideNumber);
-                    else setStatus({ slide: signal.slideNumber, text: "Saved for later ✓ It's in My Review after class.", error: false });
+                    else setToast({ id: Date.now(), text: "Saved for later ✓ It's in My Review after class.", error: false });
                   }}
                   onClear={erasePaint}
                 />
               )}
-            </>
-          ) : (
-            <>
-              <p role="status" className={`text-center text-sm ${status?.slide === shown && status.error ? "text-red-700" : "text-gray-600"}`}>
-                {status?.slide === shown ? status.text : "I'm Lost = the whole slide. ✍️ Point = one exact spot."}
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <LostButton
-                  key={shown}
-                  sessionId={session.id}
-                  slideNumber={shown}
-                  done={mine.some(s => s.kind === "lost" && s.slideNumber === shown)}
-                  onSaved={saved}
-                  onStatus={(text, error) => setStatus({ slide: shown, text, error })}
-                />
-                <button
-                  onClick={() => setPaintSlide(shown)}
-                  className="w-full rounded-xl border-2 border-emerald-900 bg-white p-2 font-bold leading-tight text-emerald-900"
-                >
-                  ✍️ Point to the exact part
-                </button>
-              </div>
             </>
           )}
         </div>
