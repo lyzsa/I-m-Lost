@@ -10,6 +10,7 @@ export const ERRORS = {
 } as const;
 
 export const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+export const OTHER_TEXT_MAX = 200; // same limit as signals.other_text in supabase/migrations/0002_other_text.sql
 
 export function randomCode(): string {
   return Array.from({ length: 6 }, () => CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)]).join("");
@@ -23,8 +24,9 @@ export function normalizeCode(code: string): string {
 export function validateSignal(s: NewSignal, session: Session): void {
   if (s.slideNumber < 1 || s.slideNumber > session.slides.length) throw new Error("That slide doesn't exist");
   if (s.categories.some(c => !categories.includes(c))) throw new Error("Unknown category");
+  const other = cleanOtherText(s.otherText);
   if (s.kind === "lost") {
-    if (s.rect || s.categories.length) throw new Error("I'm Lost has no box or categories");
+    if (s.rect || s.categories.length || other) throw new Error("I'm Lost has no box or categories");
     return;
   }
   const r = s.rect;
@@ -32,4 +34,15 @@ export function validateSignal(s: NewSignal, session: Session): void {
   if (!s.categories.length) throw new Error("Pick at least one category");
   if (r.x < 0 || r.y < 0 || r.width <= 0 || r.height <= 0 || r.x + r.width > 1.000001 || r.y + r.height > 1.000001)
     throw new Error("Box is outside the slide");
+  if (s.categories.includes("Other")) {
+    if (!other) throw new Error("Tell us what's confusing in a few words");
+    if (other.length > OTHER_TEXT_MAX) throw new Error(`Keep it under ${OTHER_TEXT_MAX} characters`);
+  } else if (other) {
+    throw new Error("Only add your own words when you pick Other");
+  }
+}
+
+// What both backends store: the trimmed words, or nothing if they're blank. validateSignal runs first.
+export function cleanOtherText(text: string | undefined): string | undefined {
+  return text?.trim() || undefined;
 }

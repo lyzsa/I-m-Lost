@@ -26,10 +26,11 @@ export type Signal = {
   kind: "lost" | "region";
   rect?: Rect;            // only for "region"; x, y, width, height are all 0..1
   categories: Category[]; // empty for "lost", at least one for "region"
+  otherText?: string;     // the student's own words; required (1-200 chars) when "Other" is picked, absent otherwise
   explanation?: string;   // filled in by Explain Now
   createdAt: string;
 };
 
-export type NewSignal = Pick<Signal, "id" | "sessionId" | "slideNumber" | "kind" | "rect" | "categories">;
+export type NewSignal = Pick<Signal, "id" | "sessionId" | "slideNumber" | "kind" | "rect" | "categories" | "otherText">;
 
 export type Unsubscribe = () => void;

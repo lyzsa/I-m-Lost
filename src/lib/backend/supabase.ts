@@ -4,7 +4,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Category } from "../domain";
 import type { LivePhase, NewSignal, Session, Signal, Slide, Unsubscribe } from "../types";
-import { ERRORS, normalizeCode, randomCode, validateSignal } from "./rules";
+import { ERRORS, cleanOtherText, normalizeCode, randomCode, validateSignal } from "./rules";
 
 const STUDENT_KEY = "lost-student-id";
 const BUCKET = "slides";
@@ -16,10 +16,10 @@ type SlideRow = { slide_number: number; image_url: string; extracted_text: strin
 type SignalRow = {
   id: string; session_id: string; slide_number: number; student_id: string; kind: "lost" | "region";
   categories: Category[]; x: number | null; y: number | null; width: number | null; height: number | null;
-  explanation: string | null; created_at: string;
+  other_text: string | null; explanation: string | null; created_at: string;
 };
 const SESSION_COLUMNS = "id, code, title, slide_count, current_slide, phase";
-const SIGNAL_COLUMNS = "id, session_id, slide_number, student_id, kind, categories, x, y, width, height, explanation, created_at";
+const SIGNAL_COLUMNS = "id, session_id, slide_number, student_id, kind, categories, x, y, width, height, other_text, explanation, created_at";
 
 let client: SupabaseClient | null = null;
 function db(): SupabaseClient {
@@ -55,6 +55,7 @@ function toSignal(row: SignalRow): Signal {
     kind: row.kind,
     rect: row.kind === "region" && x !== null && y !== null && width !== null && height !== null ? { x, y, width, height } : undefined,
     categories: row.categories ?? [],
+    otherText: row.other_text ?? undefined,
     explanation: row.explanation ?? undefined,
     createdAt: row.created_at,
   };
@@ -205,7 +206,7 @@ export async function submitSignal(input: NewSignal): Promise<Signal> {
   const rect = input.kind === "region" ? input.rect : undefined;
   const row = {
     id: input.id, session_id: input.sessionId, slide_number: input.slideNumber, student_id: getMyStudentId(),
-    kind: input.kind, categories: input.categories,
+    kind: input.kind, categories: input.categories, other_text: cleanOtherText(input.otherText) ?? null,
     x: rect?.x ?? null, y: rect?.y ?? null, width: rect?.width ?? null, height: rect?.height ?? null,
   };
   // ignoreDuplicates: re-sending an id that's already saved (a retry) inserts nothing, so it can't count twice.
