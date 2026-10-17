@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { createSession } from "@/lib/api";
 import { pdfToSlides } from "@/features/professor/pdfToSlides";
 import { HomeLogo } from "@/features/professor/HomeLogo";
+import { MyClassesList } from "@/features/professor/MyClassesList";
+import { rememberClass } from "@/features/professor/myClasses";
 
 export default function HostPage() {
   const router = useRouter();
@@ -21,6 +23,7 @@ export default function HostPage() {
       const slides = await pdfToSlides(file, (page, total) => setStatus(`Converting page ${page} of ${total}...`));
       setStatus("Creating the class...");
       const session = await createSession(title || file.name.replace(/\.pdf$/i, ""), slides);
+      rememberClass(session);
       router.push(`/host/${session.id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong. Try again.");
@@ -51,6 +54,7 @@ export default function HostPage() {
         <p role="status" className="text-sm text-emerald-800">{status}</p>
         {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
       </div>
+      <MyClassesList />
     </main>
   );
 }

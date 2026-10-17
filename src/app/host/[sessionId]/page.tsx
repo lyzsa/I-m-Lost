@@ -10,6 +10,7 @@ import { HeatmapLayer } from "@/features/professor/HeatmapLayer";
 import { HomeLogo } from "@/features/professor/HomeLogo";
 import { JoinCard } from "@/features/professor/JoinCard";
 import { LiveControls } from "@/features/professor/LiveControls";
+import { rememberClass } from "@/features/professor/myClasses";
 import { SpotPopup } from "@/features/professor/SpotPopup";
 import { StatsPanel, type Spot } from "@/features/professor/StatsPanel";
 import { useSlideSignals } from "@/features/professor/useSlideSignals";
@@ -29,7 +30,11 @@ export default function HostLivePage() {
 
   useEffect(() => {
     let active = true;
-    getSession(sessionId).then(s => { if (active) setSession(s); }).catch(() => { if (active) setSession(null); });
+    getSession(sessionId).then(s => {
+      if (!active) return;
+      setSession(s);
+      if (s) rememberClass(s); // so this professor can resume it later from /host
+    }).catch(() => { if (active) setSession(null); });
     const unsubscribe = subscribeToSession(sessionId, s => { if (active) setSession(s); });
     return () => { active = false; unsubscribe(); };
   }, [sessionId]);
@@ -101,7 +106,7 @@ export default function HostLivePage() {
           </div>
         </div>
         <aside className="space-y-4">
-          <JoinCard code={session.code} />
+          <JoinCard sessionId={session.id} code={session.code} />
           <LiveControls session={session} onChange={setSession} />
           {showHeat ? (
             <StatsPanel signals={signals} spot={spot} onClearSpot={() => setSpotChoice(undefined)} />
