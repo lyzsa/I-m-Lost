@@ -60,9 +60,15 @@ export default function JoinForm() {
             <Link href={`/class/${previous.last.id}/review`} className="mt-2 inline-block font-bold text-emerald-900 underline">Open My Review →</Link>
           </div>
         ) : (
-          <Link href={`/class/${previous.last.id}`} className="mb-4 block rounded-2xl bg-emerald-50 p-4 font-bold text-emerald-900">
-            ← Back to {previous.last.title}
-          </Link>
+          <div className="mb-4 rounded-2xl border-2 border-amber-300 bg-amber-50 p-4">
+            <p className="font-bold">You still have a class in progress</p>
+            <p className="mt-1 text-gray-700">
+              <b>{previous.last.title}</b> (code {previous.last.code}) is still running. Joining a new class takes you out of it.
+            </p>
+            <Link href={`/class/${previous.last.id}`} className="mt-3 block rounded-xl bg-emerald-900 p-3 text-center font-bold text-white">
+              Go back to {previous.last.title}
+            </Link>
+          </div>
         )
       )}
       <form onSubmit={onSubmit} className="space-y-5 rounded-2xl bg-white p-5 shadow-sm">
