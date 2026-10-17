@@ -1,58 +1,59 @@
 "use client";
-// The dashed boxes around what the student highlighted, with a handle on each corner to make a box bigger or smaller
-// (like resizing a selection in GoodNotes). Put it inside <SlideView> after the PaintLayer, so the handles are on top.
-// Only the handles catch touches; everywhere else the paint layer underneath still paints.
-// Painting another stroke recalculates the boxes from the paint, so resize when you're done painting.
+// The dashed box around each highlighted part, with a handle on its bottom-right corner (like a GoodNotes lasso):
+// dragging the handle makes the part's ink bigger or smaller, and the box follows. The top-left corner stays put.
+// Put it inside <SlideView> after the PaintLayer, so the handles are on top. Only the handles catch touches;
+// everywhere else the paint layer underneath still paints.
 import { useRef } from "react";
-import type { Rect } from "@/lib/domain";
 import { RectBox, toSlideFraction } from "@/components/SlideView";
+import { paintedParts, scaleStrokes, type Point, type Stroke } from "@/features/student/PaintLayer";
 
-const MIN_SIDE = 0.02; // of the slide
-const CORNERS = ["nw", "ne", "sw", "se"] as const;
-type Corner = (typeof CORNERS)[number];
+type Props = {
+  strokes: Stroke[];
+  aspect: number; // slide width / height
+  onChange: (strokes: Stroke[]) => void;
+};
 
-export function BoxEditor({ boxes, onChange }: { boxes: Rect[]; onChange: (boxes: Rect[]) => void }) {
+export function BoxEditor({ strokes, aspect, onChange }: Props) {
   const layer = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ pointer: number; index: number; corner: Corner } | null>(null);
+  // While dragging: the strokes as they were when the drag started, which ones to scale, and from where.
+  const drag = useRef<{ pointer: number; start: Stroke[]; members: number[]; anchor: Point; from: number } | null>(null);
 
-  // Move the dragged corner to the pointer; the opposite corner stays put.
-  function resize(e: React.PointerEvent) {
+  // Distance from the anchor in screen pixels, so the scale is the same however the slide is shaped.
+  function reach(p: Point, anchor: Point) {
+    const r = layer.current!.getBoundingClientRect();
+    return Math.hypot((p.x - anchor.x) * r.width, (p.y - anchor.y) * r.height);
+  }
+
+  function scale(e: React.PointerEvent) {
     const d = drag.current;
     if (!d || d.pointer !== e.pointerId || !layer.current) return;
-    const p = toSlideFraction(e, layer.current);
-    const b = boxes[d.index];
-    let x1 = b.x, y1 = b.y, x2 = b.x + b.width, y2 = b.y + b.height;
-    if (d.corner[1] === "w") x1 = Math.min(p.x, x2 - MIN_SIDE); else x2 = Math.max(p.x, x1 + MIN_SIDE);
-    if (d.corner[0] === "n") y1 = Math.min(p.y, y2 - MIN_SIDE); else y2 = Math.max(p.y, y1 + MIN_SIDE);
-    onChange(boxes.map((box, i) => (i === d.index ? { x: x1, y: y1, width: x2 - x1, height: y2 - y1 } : box)));
+    const factor = Math.max(0.2, Math.min(5, reach(toSlideFraction(e, layer.current), d.anchor) / d.from));
+    onChange(scaleStrokes(d.start, d.members, d.anchor, factor));
   }
 
   return (
     <div ref={layer} className="pointer-events-none absolute inset-0">
-      {boxes.map((b, i) => (
-        <div key={i}>
-          <RectBox rect={b} className="rounded-sm border-2 border-dashed border-orange-600" />
-          {CORNERS.map(corner => (
-            <div
-              key={corner}
-              role="button"
-              aria-label="Drag to resize this box"
-              className="pointer-events-auto absolute h-6 w-6 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize touch-none rounded-full border-2 border-orange-600 bg-white shadow"
-              style={{
-                left: `${(corner[1] === "w" ? b.x : b.x + b.width) * 100}%`,
-                top: `${(corner[0] === "n" ? b.y : b.y + b.height) * 100}%`,
-              }}
-              onPointerDown={e => {
-                e.stopPropagation();
-                e.preventDefault();
-                e.currentTarget.setPointerCapture(e.pointerId);
-                drag.current = { pointer: e.pointerId, index: i, corner };
-              }}
-              onPointerMove={resize}
-              onPointerUp={() => { drag.current = null; }}
-              onPointerCancel={() => { drag.current = null; }}
-            />
-          ))}
+      {paintedParts(strokes, aspect).map(({ box, members }) => (
+        <div key={members.join(",")}>
+          <RectBox rect={box} className="rounded-sm border-2 border-dashed border-orange-600" />
+          <div
+            role="button"
+            aria-label="Drag to make this part bigger or smaller"
+            className="pointer-events-auto absolute grid h-7 w-7 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize touch-none place-items-center rounded-full border-2 border-orange-600 bg-white text-sm leading-none text-orange-700 shadow"
+            style={{ left: `${(box.x + box.width) * 100}%`, top: `${(box.y + box.height) * 100}%` }}
+            onPointerDown={e => {
+              e.stopPropagation();
+              e.preventDefault();
+              e.currentTarget.setPointerCapture(e.pointerId);
+              const anchor = { x: box.x, y: box.y };
+              drag.current = { pointer: e.pointerId, start: strokes, members, anchor, from: Math.max(1, reach({ x: box.x + box.width, y: box.y + box.height }, anchor)) };
+            }}
+            onPointerMove={scale}
+            onPointerUp={() => { drag.current = null; }}
+            onPointerCancel={() => { drag.current = null; }}
+          >
+            ⤡
+          </div>
         </div>
       ))}
     </div>

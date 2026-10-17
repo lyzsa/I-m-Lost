@@ -284,7 +284,10 @@ export default function Page() {
                   onChange={(next, nextBoxes, aspect) => { setStrokes(next); setBoxes(nextBoxes); slideAspect.current = aspect; }}
                 />
               )}
-              {painting && <BoxEditor boxes={boxes} onChange={setBoxes} />} {/* corner handles resize each box */}
+              {painting && ( // the handle on each box scales that part's ink
+                <BoxEditor strokes={strokes} aspect={slideAspect.current}
+                  onChange={next => { setStrokes(next); setBoxes(paintedBoxes(next, slideAspect.current)); }} />
+              )}
             </SlideView>
             {/* 💡 in the margin, level with each explained box (stays while painting so the slide doesn't change size) */}
             {explainedHere.length > 0 && <ExplainRail marks={explainedHere} activeId={explain?.signalId} disabled={painting} onOpen={openBox} />}
