@@ -5,7 +5,7 @@
 // Painting only works after tapping "Point to the exact part" (paint mode), so a stray thumb can't mark anything.
 // In paint mode the slide is held still, so the mark can't land on the wrong slide.
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useParams } from "next/navigation";
 import { explainSignal, getMySignals, getSession, subscribeToSession, type Session, type Signal } from "@/lib/api";
 import type { Rect } from "@/lib/domain";
@@ -13,7 +13,7 @@ import { RectBox, SlideView } from "@/components/SlideView";
 import { ExplainPanel, type Explain } from "@/features/student/ExplainPanel";
 import { FloatingActions, type Toast } from "@/features/student/FloatingActions";
 import { LostButton } from "@/features/student/LostButton";
-import { BRUSHES, PaintLayer, type Brush, type Stroke } from "@/features/student/PaintLayer";
+import { BRUSH_MAX, BRUSH_MIN, PaintLayer, paintedBox, type Stroke } from "@/features/student/PaintLayer";
 import { RegionPanel } from "@/features/student/RegionPanel";
 import { rememberClass } from "@/features/student/lastClass";
 import { HomeLogo } from "@/features/professor/HomeLogo"; // shared with the professor screens so the logo matches
@@ -26,7 +26,9 @@ export default function Page() {
   const [mine, setMine] = useState<Signal[]>([]); // this student's own feedback
   const [paintSlide, setPaintSlide] = useState<number | null>(null); // set while in paint mode: the slide being marked
   const [strokes, setStrokes] = useState<Stroke[]>([]);
-  const [brush, setBrush] = useState<Brush>("M");
+  const [brush, setBrush] = useState(14); // brush width in screen pixels
+  const [pencilOnly, setPencilOnly] = useState(false); // an Apple Pencil was used: fingers scroll, only the pencil paints
+  const slideAspect = useRef(16 / 9); // the slide's width / height, from the paint layer (for undo)
   const [box, setBox] = useState<Rect | null>(null);
   const [msg, setMsg] = useState<(Toast & { slide: number }) | null>(null); // last save message, for the slide it was made on
   const [wide, setWide] = useState(false); // laptop-sized screen: the controls go in a right-hand column
@@ -82,13 +84,16 @@ export default function Page() {
     setViewing(next);
   }
 
-  function erasePaint() {
-    setStrokes([]);
-    setBox(null);
+  // Take back only the last stroke, not everything the student painted.
+  function undoStroke() {
+    const next = strokes.slice(0, -1);
+    setStrokes(next);
+    setBox(paintedBox(next, slideAspect.current));
   }
 
   function leavePaintMode() {
-    erasePaint();
+    setStrokes([]);
+    setBox(null);
     setPaintSlide(null);
   }
 
@@ -104,7 +109,10 @@ export default function Page() {
         setExplain(e => (e?.signalId === signalId ? { ...e, status: "done", text } : e));
         setMine(m => m.map(s => (s.id === signalId ? { ...s, explanation: text } : s)));
       })
-      .catch(() => setExplain(e => (e?.signalId === signalId ? { ...e, status: "error" } : e)));
+      .catch(err => {
+        const text = err instanceof Error ? err.message : ""; // the API's readable reason, e.g. "AI is busy right now..."
+        setExplain(e => (e?.signalId === signalId ? { ...e, status: "error", text } : e));
+      });
   }
 
   // Tapping one of the student's own boxes: show its saved explanation, or offer to ask the AI (nothing is sent yet).
@@ -145,24 +153,30 @@ export default function Page() {
         <>
           <div className="space-y-2 rounded-xl bg-amber-100 p-3">
             <div className="flex items-center justify-between gap-3">
-              <span>{box ? "Now pick why it's confusing." : "✍️ Paint over the part you don't understand."}</span>
-              <button onClick={leavePaintMode} className="shrink-0 rounded-lg bg-white px-3 py-2 font-bold">Cancel</button>
+              <span>{box ? "Keep painting, or save it below." : "✍️ Paint over the part you don't understand."}</span>
+              <div className="flex shrink-0 gap-2">
+                <button onClick={undoStroke} disabled={!strokes.length} className="rounded-lg bg-white px-3 py-2 font-bold">↶ Undo</button>
+                <button onClick={leavePaintMode} className="rounded-lg bg-white px-3 py-2 font-bold">Cancel</button>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-3 text-sm">
               <span>Brush</span>
-              {(Object.keys(BRUSHES) as Brush[]).map(size => (
-                <button
-                  key={size}
-                  onClick={() => setBrush(size)}
-                  aria-label={`${{ S: "Thin", M: "Medium", L: "Thick" }[size]} brush`}
-                  aria-pressed={brush === size}
-                  className={`grid h-9 w-9 place-items-center rounded-lg border-2 ${brush === size ? "border-emerald-900 bg-white" : "border-transparent bg-amber-50"}`}
-                >
-                  <span className="rounded-full bg-yellow-400" style={{ width: BRUSHES[size], height: BRUSHES[size] }} />
-                </button>
-              ))}
-              {!wide && <span className="ml-1 text-gray-600">Pinch with 2 fingers to zoom</span>}
-            </div>
+              <input
+                type="range"
+                min={BRUSH_MIN}
+                max={BRUSH_MAX}
+                value={brush}
+                onChange={e => setBrush(Number(e.target.value))}
+                aria-label="Brush size"
+                className="min-w-0 flex-1 accent-emerald-900"
+              />
+              <span className="grid h-10 w-10 shrink-0 place-items-center" aria-hidden>
+                <span className="rounded-full bg-yellow-400" style={{ width: brush, height: brush }} />
+              </span>
+            </label>
+            {pencilOnly
+              ? <p className="text-sm text-gray-600">✏️ Pencil paints. Use one finger to scroll.</p>
+              : !wide && <p className="text-sm text-gray-600">Pinch with 2 fingers to zoom in.</p>}
           </div>
           {box && (
             <RegionPanel
@@ -176,7 +190,6 @@ export default function Page() {
                 if (wantsExplanation) runExplain(signal.id, signal.slideNumber);
                 else setMsg({ id: Date.now(), slide: signal.slideNumber, text: "Saved for later ✓ It's in My Review after class.", error: false });
               }}
-              onClear={erasePaint}
             />
           )}
         </>
@@ -225,10 +238,18 @@ export default function Page() {
                   ? "border-[3px] bg-orange-500/35 ring-4 ring-orange-300"
                   : "border-2 bg-orange-500/15"}`}
               >
-                {s.explanation && <span aria-hidden className="absolute -top-2.5 -right-2.5 text-base leading-none">💡</span>}
+                {s.explanation && <span aria-hidden className="absolute right-0.5 top-0.5 text-sm leading-none">💡</span>}
               </RectBox>
             ))}
-            {painting && <PaintLayer strokes={strokes} brush={brush} onChange={(next, nextBox) => { setStrokes(next); setBox(nextBox); }} />}
+            {painting && (
+              <PaintLayer
+                strokes={strokes}
+                brush={brush}
+                pencilOnly={pencilOnly}
+                onPencil={() => setPencilOnly(true)}
+                onChange={(next, nextBox, aspect) => { setStrokes(next); setBox(nextBox); slideAspect.current = aspect; }}
+              />
+            )}
             {box && <RectBox rect={box} className="rounded-sm border-[3px] border-dashed border-orange-600" />}
           </SlideView>
           {myBoxes.length > 0 && !painting && (

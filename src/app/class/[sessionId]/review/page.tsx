@@ -8,7 +8,7 @@ import { explainSignal, getMySignals, getSession, makeStudyGuide, type Session, 
 import { RectBox, SlideView } from "@/components/SlideView";
 import { HomeLogo } from "@/features/professor/HomeLogo"; // shared with the professor screens so the logo matches
 
-type Guide = { status: "idle" | "writing" | "done" | "error"; text: string };
+type Guide = { status: "idle" | "writing" | "done" | "error"; text: string }; // text = the guide, or why the AI failed
 
 export default function Page() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -38,8 +38,8 @@ export default function Page() {
     setGuide({ status: "writing", text: "" });
     try {
       setGuide({ status: "done", text: await makeStudyGuide(sessionId) });
-    } catch {
-      setGuide({ status: "error", text: "" });
+    } catch (err) {
+      setGuide({ status: "error", text: err instanceof Error ? err.message : "" });
     }
   }
 
@@ -78,7 +78,12 @@ export default function Page() {
               <button onClick={writeGuide} disabled={guide.status === "writing"} className="mt-3 w-full rounded-xl bg-emerald-900 p-4 text-lg font-bold text-white">
                 {guide.status === "writing" ? "Writing your study guide..." : guide.status === "error" ? "Try again" : "Make my study guide"}
               </button>
-              {guide.status === "error" && <p role="alert" className="mt-2 text-center text-red-700">Couldn&apos;t make the study guide. Try again.</p>}
+              {guide.status === "error" && (
+                <div role="alert" className="mt-2 text-center">
+                  <p className="text-red-700">Couldn&apos;t make the study guide. Try again.</p>
+                  {guide.text && <p className="mt-1 text-sm text-gray-600">{guide.text}</p>}
+                </div>
+              )}
             </>
           )}
         </section>
