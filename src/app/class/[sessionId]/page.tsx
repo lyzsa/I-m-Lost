@@ -10,6 +10,7 @@ import { useParams } from "next/navigation";
 import { explainSignal, getMySignals, getSession, subscribeToSession, type Session, type Signal } from "@/lib/api";
 import type { Rect } from "@/lib/domain";
 import { RectBox, SlideView } from "@/components/SlideView";
+import { BoxEditor } from "@/features/student/BoxEditor";
 import { ClassSummary } from "@/features/student/ClassSummary";
 import { ExplainPanel, type Explain } from "@/features/student/ExplainPanel";
 import { ExplainRail } from "@/features/student/ExplainRail";
@@ -283,7 +284,7 @@ export default function Page() {
                   onChange={(next, nextBoxes, aspect) => { setStrokes(next); setBoxes(nextBoxes); slideAspect.current = aspect; }}
                 />
               )}
-              {boxes.map((b, i) => <RectBox key={i} rect={b} className="rounded-sm border-2 border-dashed border-orange-600" />)}
+              {painting && <BoxEditor boxes={boxes} onChange={setBoxes} />} {/* corner handles resize each box */}
             </SlideView>
             {/* 💡 in the margin, level with each explained box (stays while painting so the slide doesn't change size) */}
             {explainedHere.length > 0 && <ExplainRail marks={explainedHere} activeId={explain?.signalId} disabled={painting} onOpen={openBox} />}
