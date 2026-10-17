@@ -155,8 +155,8 @@ export default function SummaryPage() {
         <input id="spot-threshold" type="range" min={1} max={maxThreshold} step={1} value={Math.min(threshold, maxThreshold)}
           onChange={e => setThreshold(Number(e.target.value))} className="mt-2 w-full accent-emerald-800" />
         <div className="flex justify-between text-xs text-gray-500">
-          <span>More spots</span>
-          <span>Only the busiest</span>
+          <span>Fewer students&apos; annotations</span>
+          <span>More students&apos; annotations</span>
         </div>
       </section>
 
