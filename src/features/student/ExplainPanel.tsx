@@ -12,7 +12,7 @@ export function ExplainPanel({ explain, onExplain, onClose }: Props) {
     <section aria-live="polite" className="rounded-xl border-2 border-emerald-900 bg-white p-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-bold">Explanation · Slide {explain.slideNumber}</h2>
-        <button onClick={onClose} className="rounded-lg px-3 py-1 text-sm font-bold text-gray-600">Close</button>
+        <button onClick={onClose} className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-900 hover:bg-emerald-100">Close</button>
       </div>
       {explain.status === "ask" && (
         <>
