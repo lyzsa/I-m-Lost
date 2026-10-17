@@ -14,6 +14,7 @@ import { ExplainPanel, type Explain } from "@/features/student/ExplainPanel";
 import { LostButton } from "@/features/student/LostButton";
 import { PaintLayer, type Point } from "@/features/student/PaintLayer";
 import { RegionPanel } from "@/features/student/RegionPanel";
+import { HomeLogo } from "@/features/professor/HomeLogo"; // shared with the professor screens so the logo matches
 
 export default function Page() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -24,7 +25,7 @@ export default function Page() {
   const [paintSlide, setPaintSlide] = useState<number | null>(null); // set while in paint mode: the slide being marked
   const [strokes, setStrokes] = useState<Point[][]>([]);
   const [box, setBox] = useState<Rect | null>(null);
-  const [note, setNote] = useState("");
+  const [status, setStatus] = useState<{ slide: number; text: string; error: boolean } | null>(null); // shown only on its own slide
   const [explain, setExplain] = useState<Explain | null>(null);
 
   useEffect(() => {
@@ -38,7 +39,8 @@ export default function Page() {
   if (session === null)
     return (
       <main className="mx-auto max-w-md p-8 text-center">
-        <h1 className="text-2xl font-bold">Class not found</h1>
+        <HomeLogo />
+        <h1 className="mt-6 text-2xl font-bold">Class not found</h1>
         <Link href="/join" className="mt-6 inline-block rounded-xl bg-emerald-900 px-6 py-3 text-white">Join another class</Link>
       </main>
     );
@@ -55,7 +57,6 @@ export default function Page() {
     const next = Math.max(1, Math.min(total, to));
     setFollowing(next === live); // landing on the live slide means following again
     setViewing(next);
-    setNote("");
   }
 
   function erasePaint() {
@@ -85,8 +86,9 @@ export default function Page() {
 
   return (
     <main className="mx-auto max-w-3xl p-3 pb-8 md:p-6">
-      <header className="mb-3 flex items-center justify-between gap-3">
-        <h1 className="truncate text-lg font-bold">{session.title}</h1>
+      <header className="mb-3 flex items-center gap-3">
+        <HomeLogo />
+        <h1 className="min-w-0 flex-1 truncate text-lg font-bold">{session.title}</h1>
         <span className="shrink-0 text-sm text-gray-600">Slide {shown} / {total}</span>
       </header>
 
@@ -119,15 +121,13 @@ export default function Page() {
         <button onClick={() => browse(shown + 1)} disabled={shown === total || painting} className="rounded-xl bg-white p-4 text-lg font-bold shadow-sm">Forward →</button>
       </nav>
 
-      {explain && (
-        <div className="mt-4">
-          <ExplainPanel explain={explain} onRetry={() => runExplain(explain.signalId, explain.slideNumber)} onClose={() => setExplain(null)} />
-        </div>
-      )}
+      {following && !painting && !ended && <p className="mt-3 text-center text-sm text-gray-500">Following the professor live</p>}
 
-      {!ended && (
-        <div className="mt-4 space-y-3">
-          {painting ? (
+      {/* Floating feedback bar: sticks to the bottom of the screen, so a tall slide never pushes the buttons out of reach. */}
+      {(!ended || explain) && (
+        <div className="sticky bottom-0 z-10 -mx-3 mt-4 space-y-3 border-t border-gray-200 bg-[#f3f5f2]/95 px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur md:-mx-6 md:px-6">
+          {explain && <ExplainPanel explain={explain} onRetry={() => runExplain(explain.signalId, explain.slideNumber)} onClose={() => setExplain(null)} />}
+          {ended ? null : painting ? (
             <>
               <div className="flex items-center justify-between gap-3 rounded-xl bg-amber-100 p-3">
                 <span>{box ? "Now pick why it's confusing." : "✍️ Paint over the part you don't understand."}</span>
@@ -143,7 +143,7 @@ export default function Page() {
                     saved(signal);
                     leavePaintMode();
                     if (wantsExplanation) runExplain(signal.id, signal.slideNumber);
-                    else setNote("Saved for later ✓ It's in My Review after class.");
+                    else setStatus({ slide: signal.slideNumber, text: "Saved for later ✓ It's in My Review after class.", error: false });
                   }}
                   onClear={erasePaint}
                 />
@@ -151,25 +151,29 @@ export default function Page() {
             </>
           ) : (
             <>
-              {note && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-center text-emerald-900">{note}</p>}
-              <LostButton
-                key={shown}
-                sessionId={session.id}
-                slideNumber={shown}
-                done={mine.some(s => s.kind === "lost" && s.slideNumber === shown)}
-                onSaved={saved}
-              />
-              <button
-                onClick={() => { setPaintSlide(shown); setNote(""); }}
-                className="w-full rounded-xl border-2 border-emerald-900 bg-white p-4 text-xl font-bold text-emerald-900"
-              >
-                ✍️ Point to the exact part
-              </button>
+              <p role="status" className={`text-center text-sm ${status?.slide === shown && status.error ? "text-red-700" : "text-gray-600"}`}>
+                {status?.slide === shown ? status.text : "I'm Lost = the whole slide. ✍️ Point = one exact spot."}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <LostButton
+                  key={shown}
+                  sessionId={session.id}
+                  slideNumber={shown}
+                  done={mine.some(s => s.kind === "lost" && s.slideNumber === shown)}
+                  onSaved={saved}
+                  onStatus={(text, error) => setStatus({ slide: shown, text, error })}
+                />
+                <button
+                  onClick={() => setPaintSlide(shown)}
+                  className="w-full rounded-xl border-2 border-emerald-900 bg-white p-2 font-bold leading-tight text-emerald-900"
+                >
+                  ✍️ Point to the exact part
+                </button>
+              </div>
             </>
           )}
         </div>
       )}
-      {following && !painting && !ended && <p className="mt-3 text-center text-sm text-gray-500">Following the professor live</p>}
     </main>
   );
 }

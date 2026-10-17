@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { explainSignal, getMySignals, getSession, makeStudyGuide, type Session, type Signal } from "@/lib/api";
 import { RectBox, SlideView } from "@/components/SlideView";
+import { HomeLogo } from "@/features/professor/HomeLogo"; // shared with the professor screens so the logo matches
 
 type Guide = { status: "idle" | "writing" | "done" | "error"; text: string };
 
@@ -25,7 +26,8 @@ export default function Page() {
   if (session === null)
     return (
       <main className="mx-auto max-w-md p-8 text-center">
-        <h1 className="text-2xl font-bold">Class not found</h1>
+        <HomeLogo />
+        <h1 className="mt-6 text-2xl font-bold">Class not found</h1>
         <Link href="/join" className="mt-6 inline-block rounded-xl bg-emerald-900 px-6 py-3 text-white">Join another class</Link>
       </main>
     );
@@ -55,8 +57,11 @@ export default function Page() {
   return (
     <main className="mx-auto max-w-2xl space-y-4 p-3 pb-10 md:p-6">
       <header>
-        <Link href={`/class/${session.id}`} className="text-sm text-gray-600">← Back to class</Link>
-        <h1 className="mt-1 text-2xl font-bold">My Review</h1>
+        <div className="flex items-center justify-between gap-3">
+          <HomeLogo />
+          <Link href={`/class/${session.id}`} className="text-sm text-gray-600">← Back to class</Link>
+        </div>
+        <h1 className="mt-4 text-2xl font-bold">My Review</h1>
         <p className="text-gray-600">{session.title} · only you can see this page</p>
       </header>
 
