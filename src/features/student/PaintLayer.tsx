@@ -15,7 +15,7 @@ import { toSlideFraction } from "@/components/SlideView";
 
 export type Point = { x: number; y: number };
 export type Stroke = { r: number; points: Point[] }; // r = brush radius as a fraction of the slide width
-export const BRUSHES = { Thin: 8, Medium: 16, Thick: 28 } as const; // brush width in screen pixels
+export const BRUSH_MIN = 4, BRUSH_MAX = 36, BRUSH_START = 16; // brush width in screen pixels
 const PAINT = "#facc15";
 
 // One box per highlighted part: each stroke gets its own box (grown by its brush size, kept inside the slide),
