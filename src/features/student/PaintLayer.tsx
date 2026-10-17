@@ -12,11 +12,12 @@ import { toSlideFraction } from "@/components/SlideView";
 
 export type Point = { x: number; y: number };
 export type Stroke = { r: number; points: Point[] }; // r = brush radius as a fraction of the slide width
-export const BRUSH_MIN = 4, BRUSH_MAX = 40; // brush width in screen pixels
+export const BRUSHES = { Thin: 8, Medium: 16, Thick: 28 } as const; // brush width in screen pixels
 const PAINT = "#facc15";
 
 // The smallest box around every painted point, grown by each stroke's brush size and kept inside the slide.
-// null if nothing is painted or the box is tiny (under 0.02 wide or tall).
+// A very thin line (thin brush, a big screen, or zoomed in) still makes a box: each side is at least MIN_SIDE.
+// null only if nothing is painted.
 export function paintedBox(strokes: Stroke[], aspect: number): Rect | null {
   if (!strokes.length) return null;
   const clamp = (v: number) => Math.max(0, Math.min(1, v));
@@ -28,8 +29,18 @@ export function paintedBox(strokes: Stroke[], aspect: number): Rect | null {
       y1 = Math.min(y1, p.y - ry); y2 = Math.max(y2, p.y + ry);
     }
   }
-  const box = { x: clamp(x1), y: clamp(y1), width: clamp(x2) - clamp(x1), height: clamp(y2) - clamp(y1) };
-  return box.width < 0.02 || box.height < 0.02 ? null : box;
+  const [x, width] = atLeast(clamp(x1), clamp(x2));
+  const [y, height] = atLeast(clamp(y1), clamp(y2));
+  return { x, y, width, height };
+}
+
+const MIN_SIDE = 0.03; // of the slide
+
+// Widen [start, end] around its middle to at least MIN_SIDE, without leaving 0..1. Returns [start, size].
+function atLeast(start: number, end: number): [number, number] {
+  if (end - start >= MIN_SIDE) return [start, end - start];
+  const from = Math.max(0, Math.min(1 - MIN_SIDE, (start + end) / 2 - MIN_SIDE / 2));
+  return [from, MIN_SIDE];
 }
 
 type Props = {
