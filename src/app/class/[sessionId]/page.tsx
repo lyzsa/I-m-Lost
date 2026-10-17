@@ -107,6 +107,11 @@ export default function Page() {
       .catch(() => setExplain(e => (e?.signalId === signalId ? { ...e, status: "error" } : e)));
   }
 
+  // Tapping one of the student's own boxes: show its saved explanation, or offer to ask the AI (nothing is sent yet).
+  function openBox(s: Signal) {
+    setExplain({ signalId: s.id, slideNumber: s.slideNumber, status: s.explanation ? "done" : "ask", text: s.explanation ?? "" });
+  }
+
   const lostButton = (className?: string) => (
     <LostButton
       key={shown}
@@ -135,7 +140,7 @@ export default function Page() {
   // What to show while painting (reasons) or after Explain Now. Phones show it in a bottom sheet, laptops in the side column.
   const sheet = (
     <>
-      {explain && <ExplainPanel explain={explain} onRetry={() => runExplain(explain.signalId, explain.slideNumber)} onClose={() => setExplain(null)} />}
+      {explain && <ExplainPanel explain={explain} onExplain={() => runExplain(explain.signalId, explain.slideNumber)} onClose={() => setExplain(null)} />}
       {painting && (
         <>
           <div className="space-y-2 rounded-xl bg-amber-100 p-3">
@@ -209,10 +214,26 @@ export default function Page() {
           ) : null}
 
           <SlideView imageUrl={slide.imageUrl} alt={`Slide ${shown}`} className={painting ? "ring-4 ring-amber-400" : ""}>
-            {myBoxes.map(s => <RectBox key={s.id} rect={s.rect!} className="rounded-sm border-2 border-orange-500 bg-orange-500/15" />)}
+            {myBoxes.map(s => (
+              <RectBox
+                key={s.id}
+                rect={s.rect!}
+                // clickable on any slide and in any phase, but not while painting (then taps must reach the paint layer)
+                onClick={painting ? undefined : () => openBox(s)}
+                title={s.explanation ? "See the AI explanation" : "Ask the AI to explain this"}
+                className={`rounded-sm border-orange-500 ${explain?.signalId === s.id
+                  ? "border-[3px] bg-orange-500/35 ring-4 ring-orange-300"
+                  : "border-2 bg-orange-500/15"}`}
+              >
+                {s.explanation && <span aria-hidden className="absolute -top-2.5 -right-2.5 text-base leading-none">💡</span>}
+              </RectBox>
+            ))}
             {painting && <PaintLayer strokes={strokes} brush={brush} onChange={(next, nextBox) => { setStrokes(next); setBox(nextBox); }} />}
             {box && <RectBox rect={box} className="rounded-sm border-[3px] border-dashed border-orange-600" />}
           </SlideView>
+          {myBoxes.length > 0 && !painting && (
+            <p className="mt-2 text-center text-sm text-gray-500">Tap your orange boxes to see the AI explanation again.</p>
+          )}
 
           <nav className="mt-3 grid grid-cols-2 gap-3">
             <button onClick={() => browse(shown - 1)} disabled={shown === 1 || painting} className="rounded-xl bg-white p-4 text-lg font-bold shadow-sm">← Back</button>
