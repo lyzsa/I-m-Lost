@@ -5,14 +5,18 @@ import { useParams } from "next/navigation";
 import { getSession, subscribeToSession, type Session } from "@/lib/api";
 import { SlideView, toSlideFraction } from "@/components/SlideView";
 import { DenseAreaLayer } from "@/features/professor/DenseAreaLayer";
+import { EyeIcon } from "@/features/professor/EyeIcon";
 import { findDenseAreas } from "@/features/professor/denseAreas";
 import { HeatmapLayer } from "@/features/professor/HeatmapLayer";
 import { HomeLogo } from "@/features/professor/HomeLogo";
 import { JoinCard } from "@/features/professor/JoinCard";
 import { LiveControls } from "@/features/professor/LiveControls";
+import { rememberClass } from "@/features/professor/myClasses";
+import { SlideNav } from "@/features/professor/SlideNav";
 import { SpotPopup } from "@/features/professor/SpotPopup";
 import { StatsPanel, type Spot } from "@/features/professor/StatsPanel";
 import { useSlideSignals } from "@/features/professor/useSlideSignals";
+import { ZoomStage } from "@/features/professor/ZoomStage";
 
 export default function HostLivePage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -29,7 +33,11 @@ export default function HostLivePage() {
 
   useEffect(() => {
     let active = true;
-    getSession(sessionId).then(s => { if (active) setSession(s); }).catch(() => { if (active) setSession(null); });
+    getSession(sessionId).then(s => {
+      if (!active) return;
+      setSession(s);
+      if (s) rememberClass(s); // so this professor can resume it later from /host
+    }).catch(() => { if (active) setSession(null); });
     const unsubscribe = subscribeToSession(sessionId, s => { if (active) setSession(s); });
     return () => { active = false; unsubscribe(); };
   }, [sessionId]);
@@ -59,28 +67,33 @@ export default function HostLivePage() {
         </div>
         <span className="text-sm text-gray-600">Professor view</span>
       </header>
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div>
-          <SlideView
-            imageUrl={slide.imageUrl}
-            alt={`Slide ${slide.number}`}
-            className={showHeat ? "cursor-crosshair" : ""}
-            onClick={e => { if (showHeat) setSpotChoice({ key: heatKey, spot: toSlideFraction(e, e.currentTarget) }); }}
-            onPointerMove={e => { if (showHeat && e.pointerType === "mouse") setHover(toSlideFraction(e, e.currentTarget)); }}
-            onPointerLeave={() => setHover(undefined)}
-          >
-            {showHeat && <HeatmapLayer signals={signals} />}
-            {showHeat && <DenseAreaLayer areas={areas} />}
-            {showHeat && hover && <SpotPopup signals={signals} spot={hover} />}
-            {spot && (
-              <div
-                className="pointer-events-none absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-emerald-700 shadow"
-                style={{ left: `${spot.x * 100}%`, top: `${spot.y * 100}%` }}
-              />
-            )}
-          </SlideView>
+      {/* minmax(0,1fr): never let a large slide image push the side panel off screen */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0">
+          <ZoomStage imageUrl={slide.imageUrl}>
+            <SlideView
+              imageUrl={slide.imageUrl}
+              alt={`Slide ${slide.number}`}
+              className={showHeat ? "cursor-crosshair" : ""}
+              onClick={e => { if (showHeat) setSpotChoice({ key: heatKey, spot: toSlideFraction(e, e.currentTarget) }); }}
+              onPointerMove={e => { if (showHeat && e.pointerType === "mouse") setHover(toSlideFraction(e, e.currentTarget)); }}
+              onPointerLeave={() => setHover(undefined)}
+            >
+              {showHeat && <HeatmapLayer signals={signals} />}
+              {showHeat && <DenseAreaLayer areas={areas} />}
+              {showHeat && hover && <SpotPopup signals={signals} spot={hover} />}
+              {spot && (
+                <div
+                  className="pointer-events-none absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-emerald-700 shadow"
+                  style={{ left: `${spot.x * 100}%`, top: `${spot.y * 100}%` }}
+                />
+              )}
+            </SlideView>
+          </ZoomStage>
+          <SlideNav session={session} onChange={setSession} />
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <button className="rounded-xl bg-white px-4 py-2" onClick={() => setHeatChoice({ key: heatKey, show: !showHeat })}>
+            <button className="flex items-center gap-2 rounded-xl bg-white px-4 py-2" onClick={() => setHeatChoice({ key: heatKey, show: !showHeat })}>
+              <EyeIcon off={showHeat} />
               {showHeat ? "Hide heatmap (clean view)" : "Show heatmap"}
             </button>
             {showHeat && (
@@ -101,7 +114,7 @@ export default function HostLivePage() {
           </div>
         </div>
         <aside className="space-y-4">
-          <JoinCard code={session.code} />
+          <JoinCard sessionId={session.id} code={session.code} />
           <LiveControls session={session} onChange={setSession} />
           {showHeat ? (
             <StatsPanel signals={signals} spot={spot} onClearSpot={() => setSpotChoice(undefined)} />
