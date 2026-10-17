@@ -11,6 +11,7 @@ import { HomeLogo } from "@/features/professor/HomeLogo";
 import { JoinCard } from "@/features/professor/JoinCard";
 import { LiveControls } from "@/features/professor/LiveControls";
 import { rememberClass } from "@/features/professor/myClasses";
+import { SlideNav } from "@/features/professor/SlideNav";
 import { SpotPopup } from "@/features/professor/SpotPopup";
 import { StatsPanel, type Spot } from "@/features/professor/StatsPanel";
 import { useSlideSignals } from "@/features/professor/useSlideSignals";
@@ -84,6 +85,7 @@ export default function HostLivePage() {
               />
             )}
           </SlideView>
+          <SlideNav session={session} onChange={setSession} />
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <button className="rounded-xl bg-white px-4 py-2" onClick={() => setHeatChoice({ key: heatKey, show: !showHeat })}>
               {showHeat ? "Hide heatmap (clean view)" : "Show heatmap"}
