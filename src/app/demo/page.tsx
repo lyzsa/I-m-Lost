@@ -1,8 +1,8 @@
 "use client";
 import {useRef,useState} from "react";
-import {advance,atPoint,categories,counts, type Rect,type Signal,type Phase,type Category} from "@/lib/domain";
+import {advance,atPoint,categories,counts, type Rect,type DemoSignal,type Phase,type Category} from "@/lib/domain";
 export default function Demo(){
- const [live,setLive]=useState(1),[view,setView]=useState(1),[follow,setFollow]=useState(true),[phase,setPhase]=useState<Phase>("presenting"),[layer,setLayer]=useState(true),[signals,setSignals]=useState<Signal[]>([]),[rect,setRect]=useState<Rect>(),[selected,setSelected]=useState<Category[]>([]),[detail,setDetail]=useState<Signal[]>([]),[note,setNote]=useState("");
+ const [live,setLive]=useState(1),[view,setView]=useState(1),[follow,setFollow]=useState(true),[phase,setPhase]=useState<Phase>("presenting"),[layer,setLayer]=useState(true),[signals,setSignals]=useState<DemoSignal[]>([]),[rect,setRect]=useState<Rect>(),[selected,setSelected]=useState<Category[]>([]),[detail,setDetail]=useState<DemoSignal[]>([]),[note,setNote]=useState("");
  const start=useRef<{x:number;y:number}|null>(null);
  const current=signals.filter(s=>s.slide===view);
  function submit(region?:Rect){if(!region&&signals.some(s=>s.slide===view&&!s.rect)){setNote("Already marked Lost on this slide.");return;}setSignals(s=>[...s,{id:crypto.randomUUID(),slide:view,rect:region,categories:region?selected:[],saved:true}]);setRect(undefined);setSelected([]);setNote("Saved for later in this demo session.");}

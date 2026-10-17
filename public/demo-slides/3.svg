@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" font-family="Arial, Helvetica, sans-serif">
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b45309"/></marker></defs>
+  <rect width="1600" height="900" fill="#ffffff"/>
+  <text x="100" y="120" font-size="30" fill="#047857" font-weight="bold">POINTERS 101 · SLIDE 3</text>
+  <text x="100" y="220" font-size="76" font-weight="bold" fill="#17251e">Indirection</text>
+  <text x="250" y="350" font-size="36" fill="#475569" text-anchor="middle">p (at 0x2000)</text>
+  <rect x="100" y="380" width="300" height="160" rx="16" fill="#fef3c7" stroke="#b45309" stroke-width="4"/>
+  <text x="250" y="480" font-size="48" text-anchor="middle" font-family="Courier New, monospace">0x1000</text>
+  <line x1="410" y1="460" x2="880" y2="460" stroke="#b45309" stroke-width="8" marker-end="url(#arrow)"/>
+  <text x="645" y="430" font-size="34" fill="#b45309" text-anchor="middle">points to</text>
+  <text x="1050" y="350" font-size="36" fill="#475569" text-anchor="middle">value (at 0x1000)</text>
+  <rect x="900" y="380" width="300" height="160" rx="16" fill="#e0f2fe" stroke="#0369a1" stroke-width="4"/>
+  <text x="1050" y="480" font-size="56" text-anchor="middle" font-family="Courier New, monospace">42</text>
+  <text x="100" y="680" font-size="44" fill="#17251e">*p reads 42: go to the address stored in p, read what is there.</text>
+  <text x="100" y="760" font-size="44" fill="#17251e">*p = 7 changes value to 7 without naming value.</text>
+</svg>

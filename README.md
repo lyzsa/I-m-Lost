@@ -4,6 +4,8 @@
 
 ## 下次从这里继续
 
+**10 小时 hackathon 版本：先读 [PLAN.md](PLAN.md)（英文，取代 TASKS.md 的 36 小时计划）。AI 编程助手规则见 [AGENTS.md](AGENTS.md)。**
+
 1. 阅读 [已确认决策](docs/decisions.md) 和 [PRD](docs/PRD-draft.md)。
 2. 依照 [TASKS.md](TASKS.md) 领取 A/B/C 分工，先完成一条真实跨设备闭环。
 3. 阅读 [架构与接口](docs/architecture.md)，对齐事件与数据字段。

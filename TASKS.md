@@ -1,3 +1,5 @@
+> **Superseded for the 10-hour hackathon build by [PLAN.md](PLAN.md).** Kept for reference; do not implement from this file.
+
 # 36 小时执行清单
 
 标记：已完成指本骨架；未勾选均需后续开发。A/B/C 为占位队员名，各人垂直负责一条路径。

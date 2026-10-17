@@ -1,3 +1,5 @@
+> **Superseded for the 10-hour hackathon build by [PLAN.md](../PLAN.md).** Kept for reference; do not implement from this file.
+
 # 架构与接口约定
 
 ## 模块

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" font-family="Arial, Helvetica, sans-serif">
+  <rect width="1600" height="900" fill="#ffffff"/>
+  <text x="100" y="120" font-size="30" fill="#047857" font-weight="bold">POINTERS 101 · SLIDE 2</text>
+  <text x="100" y="220" font-size="76" font-weight="bold" fill="#17251e">Pointer arithmetic</text>
+  <rect x="200" y="300" width="1200" height="180" rx="24" fill="#ecfdf5" stroke="#059669" stroke-width="4"/>
+  <text x="800" y="410" font-size="64" text-anchor="middle" fill="#064e3b" font-family="Georgia, serif" font-style="italic">address(arr[i]) = base + i × sizeof(T)</text>
+  <text x="100" y="590" font-size="42" fill="#17251e">Example: int arr[4] starts at 0x1000, and sizeof(int) = 4</text>
+  <text x="100" y="670" font-size="42" fill="#17251e">so arr[2] is at 0x1000 + 2 × 4 = 0x1008</text>
+  <text x="100" y="790" font-size="34" fill="#475569">p + 1 moves by sizeof(T) bytes, not by 1 byte.</text>
+</svg>
