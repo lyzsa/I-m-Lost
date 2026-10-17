@@ -3,12 +3,14 @@
 // the threshold, and group touching cells into areas. Each area gets its own reason breakdown.
 import { categories, type Category, type Rect } from "@/lib/domain";
 import type { Signal } from "@/lib/types";
+import { otherAnswers } from "./stats";
 
 export type DenseArea = {
   bounds: Rect;                         // smallest box around the area, 0..1
   students: number;                     // different students who marked inside the area
   peak: number;                         // most students overlapping on a single spot in the area
   reasons: Record<Category, number>;    // students per reason (each student counts once per reason)
+  otherAnswers: string[];               // typed "Other" reasons from marks in this area
 };
 
 const COLS = 80;
@@ -63,6 +65,7 @@ export function findDenseAreas(signals: Signal[], threshold: number): DenseArea[
       students: new Set(list.map(s => s.studentId)).size,
       peak,
       reasons,
+      otherAnswers: otherAnswers(list),
     });
   }
   return areas.sort((a, b) => b.peak - a.peak || b.students - a.students);

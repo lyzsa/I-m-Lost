@@ -54,3 +54,18 @@ test("dense areas: only spots marked by enough different students become areas, 
   // one student drawing two overlapping boxes is still one student
   assert.equal(findDenseAreas([box("ana", .1, .1, .3, .3, ["Other"]), box("ana", .2, .2, .3, .3, ["Other"])], 2).length, 0);
 });
+
+test("Other answers: only typed reasons from boxes that picked Other, oldest first, also per dense area", async () => {
+  const { otherAnswers } = await import("../src/features/professor/stats");
+  const { findDenseAreas } = await import("../src/features/professor/denseAreas");
+  const box = (studentId: string, createdAt: string, categories: any[], otherText?: string) =>
+    ({ id: studentId + createdAt, sessionId: "s", slideNumber: 1, studentId, kind: "region" as const,
+       rect: { x: .2, y: .2, width: .3, height: .3 }, categories, otherText, createdAt });
+  const signals = [
+    box("ben", "2026-10-17T10:02:00Z", ["Other"], "what does * mean here?"),
+    box("ana", "2026-10-17T10:01:00Z", ["Need an example", "Other"], "too fast"),
+    box("cam", "2026-10-17T10:03:00Z", ["Need an example"]),
+  ];
+  assert.deepEqual(otherAnswers(signals), ["too fast", "what does * mean here?"]);
+  assert.deepEqual(findDenseAreas(signals, 2)[0].otherAnswers, ["too fast", "what does * mean here?"]);
+});

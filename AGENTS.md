@@ -33,7 +33,7 @@ This is a 3-person, 10-hour hackathon build. The humans are not experienced prog
 **Gotchas already known:**
 - This is Next.js 16: pages with `[sessionId]` in the path get the id via `useParams()` in client components (see the comment in each placeholder). Read the Next.js note at the bottom of this file.
 - Components using state, effects or the contract functions need `"use client"` as their first line.
-- pdf.js only runs in the browser. Load it inside the upload handler with `await import("pdfjs-dist")`. If it reports a worker error, copy `node_modules/pdfjs-dist/build/pdf.worker.min.mjs` into `public/` and set `GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs"`.
+- pdf.js only runs in the browser and is loaded inside the upload handler (`src/features/professor/pdfToSlides.ts`). It uses pdf.js's **legacy** build plus a small stream fix, because the normal build breaks uploads on Safari / iPhone / iPad. The worker lives in `public/pdfjs/`. Don't switch back to `import("pdfjs-dist")`.
 - The mock shrinks uploaded slides to fit browser storage (about 5 MB total), so test with short PDFs.
 
 ## Rules
