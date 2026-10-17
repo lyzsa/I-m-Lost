@@ -13,7 +13,7 @@ import { RectBox, SlideView } from "@/components/SlideView";
 import { ExplainPanel, type Explain } from "@/features/student/ExplainPanel";
 import { FloatingActions, type Toast } from "@/features/student/FloatingActions";
 import { LostButton } from "@/features/student/LostButton";
-import { PaintLayer, type Point } from "@/features/student/PaintLayer";
+import { BRUSHES, PaintLayer, type Brush, type Stroke } from "@/features/student/PaintLayer";
 import { RegionPanel } from "@/features/student/RegionPanel";
 import { rememberClass } from "@/features/student/lastClass";
 import { HomeLogo } from "@/features/professor/HomeLogo"; // shared with the professor screens so the logo matches
@@ -25,7 +25,8 @@ export default function Page() {
   const [viewing, setViewing] = useState(1); // only used while not following
   const [mine, setMine] = useState<Signal[]>([]); // this student's own feedback
   const [paintSlide, setPaintSlide] = useState<number | null>(null); // set while in paint mode: the slide being marked
-  const [strokes, setStrokes] = useState<Point[][]>([]);
+  const [strokes, setStrokes] = useState<Stroke[]>([]);
+  const [brush, setBrush] = useState<Brush>("M");
   const [box, setBox] = useState<Rect | null>(null);
   const [msg, setMsg] = useState<(Toast & { slide: number }) | null>(null); // last save message, for the slide it was made on
   const [wide, setWide] = useState(false); // laptop-sized screen: the controls go in a right-hand column
@@ -137,9 +138,26 @@ export default function Page() {
       {explain && <ExplainPanel explain={explain} onRetry={() => runExplain(explain.signalId, explain.slideNumber)} onClose={() => setExplain(null)} />}
       {painting && (
         <>
-          <div className="flex items-center justify-between gap-3 rounded-xl bg-amber-100 p-3">
-            <span>{box ? "Now pick why it's confusing." : "✍️ Paint over the part you don't understand."}</span>
-            <button onClick={leavePaintMode} className="shrink-0 rounded-lg bg-white px-3 py-2 font-bold">Cancel</button>
+          <div className="space-y-2 rounded-xl bg-amber-100 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <span>{box ? "Now pick why it's confusing." : "✍️ Paint over the part you don't understand."}</span>
+              <button onClick={leavePaintMode} className="shrink-0 rounded-lg bg-white px-3 py-2 font-bold">Cancel</button>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span>Brush</span>
+              {(Object.keys(BRUSHES) as Brush[]).map(size => (
+                <button
+                  key={size}
+                  onClick={() => setBrush(size)}
+                  aria-label={`${{ S: "Thin", M: "Medium", L: "Thick" }[size]} brush`}
+                  aria-pressed={brush === size}
+                  className={`grid h-9 w-9 place-items-center rounded-lg border-2 ${brush === size ? "border-emerald-900 bg-white" : "border-transparent bg-amber-50"}`}
+                >
+                  <span className="rounded-full bg-yellow-400" style={{ width: BRUSHES[size], height: BRUSHES[size] }} />
+                </button>
+              ))}
+              {!wide && <span className="ml-1 text-gray-600">Pinch with 2 fingers to zoom</span>}
+            </div>
           </div>
           {box && (
             <RegionPanel
@@ -192,7 +210,7 @@ export default function Page() {
 
           <SlideView imageUrl={slide.imageUrl} alt={`Slide ${shown}`} className={painting ? "ring-4 ring-amber-400" : ""}>
             {myBoxes.map(s => <RectBox key={s.id} rect={s.rect!} className="rounded-sm border-2 border-orange-500 bg-orange-500/15" />)}
-            {painting && <PaintLayer strokes={strokes} onChange={(next, nextBox) => { setStrokes(next); setBox(nextBox); }} />}
+            {painting && <PaintLayer strokes={strokes} brush={brush} onChange={(next, nextBox) => { setStrokes(next); setBox(nextBox); }} />}
             {box && <RectBox rect={box} className="rounded-sm border-[3px] border-dashed border-orange-600" />}
           </SlideView>
 
