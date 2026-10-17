@@ -70,13 +70,17 @@ type Step = { type?: string; content?: { type?: string; text?: string }[] };
 export async function ask(system: string, input: Part[]): Promise<string> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new AiError("AI isn't set up yet (check GEMINI_API_KEY)", 503);
+  // Gemini's "busy" errors usually pass within a second, so each model gets a second try before moving on.
   let lastError: unknown;
   for (const model of MODELS) {
-    try {
-      return await askModel(key, model, system, input);
-    } catch (err) {
-      if (!(err instanceof AiError) || !err.tryAnotherModel) throw err;
-      lastError = err;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        return await askModel(key, model, system, input);
+      } catch (err) {
+        if (!(err instanceof AiError) || !err.tryAnotherModel) throw err;
+        lastError = err;
+        if (attempt === 1) await new Promise(resolve => setTimeout(resolve, 800));
+      }
     }
   }
   throw lastError;
