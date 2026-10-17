@@ -4,7 +4,7 @@
 // when zoomed in, scroll to move around. Overlays drawn in 0..1 fractions zoom along with the slide.
 // Usage: <ZoomStage imageUrl={slide.imageUrl}><SlideView imageUrl={slide.imageUrl}>...</SlideView></ZoomStage>
 // (B can reuse this on the student screen; pass className to change the area's height.)
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 4;
@@ -54,10 +54,56 @@ export function ZoomStage({ imageUrl, children, className = "h-[calc(100vh-15rem
   }, []);
 
   const fitWidth = size && aspect ? Math.max(0, Math.min(size.width - PAD, (size.height - PAD) * aspect)) : 0;
+  // Is the slide bigger than the area (so there's something to drag around)?
+  const pannable = !!size && !!aspect && (fitWidth * zoom + PAD > size.width + 1 || (fitWidth * zoom) / aspect + PAD > size.height + 1);
+
+  // Drag to move around (mouse only; fingers already scroll natively). A press only becomes a drag after it moves
+  // a few pixels, so a plain click still reaches the slide (e.g. the professor pinning a spot). Anything inside that
+  // handles the press itself and calls preventDefault (like a paint layer) is left alone.
+  const drag = useRef<{ x: number; y: number; left: number; top: number; moved: boolean } | null>(null);
+  const justDragged = useRef(false);
+  const [dragging, setDragging] = useState(false);
+
+  function onPointerDown(e: PointerEvent<HTMLDivElement>) {
+    if (e.pointerType !== "mouse" || e.button !== 0 || e.defaultPrevented || !pannable) return;
+    const el = e.currentTarget;
+    drag.current = { x: e.clientX, y: e.clientY, left: el.scrollLeft, top: el.scrollTop, moved: false };
+  }
+  function onPointerMove(e: PointerEvent<HTMLDivElement>) {
+    const d = drag.current;
+    if (!d) return;
+    const dx = e.clientX - d.x, dy = e.clientY - d.y;
+    if (!d.moved) {
+      if (Math.hypot(dx, dy) < 4) return;
+      d.moved = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setDragging(true);
+    }
+    e.preventDefault(); // no text selection while dragging
+    e.currentTarget.scrollLeft = d.left - dx;
+    e.currentTarget.scrollTop = d.top - dy;
+  }
+  function endDrag() {
+    if (drag.current?.moved) {
+      justDragged.current = true; // swallow the click that follows a drag
+      setTimeout(() => { justDragged.current = false; }, 0);
+    }
+    drag.current = null;
+    setDragging(false);
+  }
 
   return (
     <div className="relative">
-      <div ref={area} className={`overflow-auto rounded-2xl bg-gray-200/70 ${className}`}>
+      <div
+        ref={area}
+        className={`overflow-auto rounded-2xl bg-gray-200/70 ${className} ${
+          dragging ? "select-none cursor-grabbing [&_*]:cursor-grabbing!" : pannable ? "cursor-grab [&_*]:cursor-grab!" : ""}`}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onClickCapture={e => { if (justDragged.current) { e.stopPropagation(); e.preventDefault(); } }}
+      >
         <div className="flex items-center justify-center p-3" style={{ minWidth: "100%", minHeight: "100%", width: "max-content" }}>
           <div style={{ width: fitWidth * zoom, visibility: fitWidth ? "visible" : "hidden" }}>{children}</div>
         </div>

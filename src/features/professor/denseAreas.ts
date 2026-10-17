@@ -11,6 +11,7 @@ export type DenseArea = {
   peak: number;                         // most students overlapping on a single spot in the area
   reasons: Record<Category, number>;    // students per reason (each student counts once per reason)
   otherAnswers: string[];               // typed "Other" reasons from marks in this area
+  signalIds: string[];                  // the marks that make up this area
 };
 
 const COLS = 80;
@@ -66,6 +67,7 @@ export function findDenseAreas(signals: Signal[], threshold: number): DenseArea[
       peak,
       reasons,
       otherAnswers: otherAnswers(list),
+      signalIds: list.map(s => s.id),
     });
   }
   return areas.sort((a, b) => b.peak - a.peak || b.students - a.students);
