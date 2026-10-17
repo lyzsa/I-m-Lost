@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getSession, subscribeToSession, type Session } from "@/lib/api";
 import { SlideView, toSlideFraction } from "@/components/SlideView";
+import { AnnotationLayer } from "@/features/annotations/AnnotationLayer";
 import { DenseAreaLayer } from "@/features/professor/DenseAreaLayer";
+import { DrawLayer } from "@/features/professor/DrawLayer";
+import { DrawToolbar, PEN_COLORS, PEN_WIDTHS } from "@/features/professor/DrawToolbar";
 import { EyeIcon } from "@/features/professor/EyeIcon";
 import { findDenseAreas } from "@/features/professor/denseAreas";
 import { HeatmapLayer } from "@/features/professor/HeatmapLayer";
@@ -16,6 +19,7 @@ import { rememberClass } from "@/features/professor/myClasses";
 import { SlideNav } from "@/features/professor/SlideNav";
 import { SpotPopup } from "@/features/professor/SpotPopup";
 import { StatsPanel, type Spot } from "@/features/professor/StatsPanel";
+import { useInstructorPen } from "@/features/professor/useInstructorPen";
 import { useSlideSignals } from "@/features/professor/useSlideSignals";
 import { ZoomStage } from "@/features/professor/ZoomStage";
 
@@ -32,6 +36,23 @@ export default function HostLivePage() {
   const [threshold, setThreshold] = useState(2); // a "dense area" needs at least this many different students
   const [responses, setResponses] = useState<ResponsesView>(); // the large "Other" responses window, when open
   const areas = useMemo(() => findDenseAreas(signals, threshold), [signals, threshold]);
+  // Draw mode: the instructor's pen strokes are saved and appear on every student's slide.
+  const [drawMode, setDrawMode] = useState(false);
+  const [penColor, setPenColor] = useState<string>(PEN_COLORS[0].value);
+  const [penWidth, setPenWidth] = useState<number>(PEN_WIDTHS[0].value);
+  const pen = useInstructorPen(sessionId, session?.currentSlide ?? 1);
+  const drawing = drawMode && !!session && session.phase !== "ended";
+
+  // Ctrl/Cmd+Z undoes the last stroke while drawing.
+  const undoStroke = pen.undo;
+  useEffect(() => {
+    if (!drawing) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "z") { e.preventDefault(); undoStroke(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [drawing, undoStroke]);
 
   useEffect(() => {
     let active = true;
@@ -76,26 +97,36 @@ export default function HostLivePage() {
             <SlideView
               imageUrl={slide.imageUrl}
               alt={`Slide ${slide.number}`}
-              className={showHeat ? "cursor-crosshair" : ""}
-              onClick={e => { if (showHeat) setSpotChoice({ key: heatKey, spot: toSlideFraction(e, e.currentTarget) }); }}
-              onPointerMove={e => { if (showHeat && e.pointerType === "mouse") setHover(toSlideFraction(e, e.currentTarget)); }}
+              className={drawing ? "ring-4 ring-amber-400" : showHeat ? "cursor-crosshair" : ""}
+              onClick={e => { if (showHeat && !drawing) setSpotChoice({ key: heatKey, spot: toSlideFraction(e, e.currentTarget) }); }}
+              onPointerMove={e => { if (showHeat && !drawing && e.pointerType === "mouse") setHover(toSlideFraction(e, e.currentTarget)); }}
               onPointerLeave={() => setHover(undefined)}
             >
               {showHeat && <HeatmapLayer signals={signals} />}
+              <AnnotationLayer annotations={pen.strokes} />
               {showHeat && (
                 <DenseAreaLayer areas={areas}
                   onOpenResponses={(n, answers) => setResponses({ title: `Slide ${slide.number} · dense area ${n}`, answers })} />
               )}
-              {showHeat && hover && <SpotPopup signals={signals} spot={hover} />}
+              {showHeat && !drawing && hover && <SpotPopup signals={signals} spot={hover} />}
               {spot && (
                 <div
                   className="pointer-events-none absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-emerald-700 shadow"
                   style={{ left: `${spot.x * 100}%`, top: `${spot.y * 100}%` }}
                 />
               )}
+              {drawing && <DrawLayer color={penColor} width={penWidth} onStroke={pts => pen.addStroke(pts, penColor, penWidth)} />}
             </SlideView>
           </ZoomStage>
           <SlideNav session={session} onChange={setSession} />
+          {session.phase !== "ended" && (
+            <div className="mt-3">
+              <DrawToolbar drawing={drawing} onToggle={() => { setDrawMode(d => !d); setHover(undefined); }}
+                color={penColor} onColor={setPenColor} width={penWidth} onWidth={setPenWidth}
+                canUndo={pen.canUndo} onUndo={pen.undo} hasStrokes={pen.hasStrokes} onClear={pen.clearSlide} />
+              {pen.error && <p role="alert" className="mt-1 text-sm text-red-700">{pen.error}</p>}
+            </div>
+          )}
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <button className="flex items-center gap-2 rounded-xl bg-white px-4 py-2" onClick={() => setHeatChoice({ key: heatKey, show: !showHeat })}>
               <EyeIcon off={showHeat} />

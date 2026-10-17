@@ -69,3 +69,15 @@ test("Other answers: only typed reasons from boxes that picked Other, oldest fir
   assert.deepEqual(otherAnswers(signals), ["too fast", "what does * mean here?"]);
   assert.deepEqual(findDenseAreas(signals, 2)[0].otherAnswers, ["too fast", "what does * mean here?"]);
 });
+
+test("instructor strokes: live events add this slide's strokes once, in time order, and remove undone ones", async () => {
+  const { applyAnnotationEvent } = await import("../src/features/annotations/useSlideAnnotations");
+  const stroke = (id: string, slideNumber: number, createdAt: string) =>
+    ({ id, sessionId: "s", slideNumber, points: [{ x: .1, y: .1 }], color: "#e34948", width: .004, createdAt });
+  let list = applyAnnotationEvent([], { type: "added", annotation: stroke("b", 1, "2026-10-17T10:02:00Z") }, 1);
+  list = applyAnnotationEvent(list, { type: "added", annotation: stroke("a", 1, "2026-10-17T10:01:00Z") }, 1);
+  list = applyAnnotationEvent(list, { type: "added", annotation: stroke("a", 1, "2026-10-17T10:01:00Z") }, 1); // repeat
+  list = applyAnnotationEvent(list, { type: "added", annotation: stroke("c", 2, "2026-10-17T10:03:00Z") }, 1); // other slide
+  assert.deepEqual(list.map(a => a.id), ["a", "b"]);
+  assert.deepEqual(applyAnnotationEvent(list, { type: "removed", ids: ["a"] }, 1).map(a => a.id), ["b"]);
+});
