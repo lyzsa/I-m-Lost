@@ -31,14 +31,14 @@ export function RegionPanel({ sessionId, slideNumber, rect, onSaved, onClear }: 
   }
 
   return (
-    <section className="rounded-xl bg-white p-4 shadow-sm">
+    <section className="rounded-xl bg-white p-3 shadow-sm">
       <h2 className="font-bold">Why is this confusing?</h2>
-      <div className="mt-2 grid gap-2">
+      <div className="mt-2 grid grid-cols-2 gap-2">
         {categories.map(c => (
-          <label key={c} className={`flex items-center gap-3 rounded-lg border-2 p-3 ${picked.includes(c) ? "border-emerald-700 bg-emerald-50" : "border-gray-200"}`}>
+          <label key={c} className={`flex items-center gap-2 rounded-lg border-2 p-2 text-sm ${picked.includes(c) ? "border-emerald-700 bg-emerald-50" : "border-gray-200"}`}>
             <input
               type="checkbox"
-              className="h-5 w-5"
+              className="h-4 w-4 shrink-0"
               checked={picked.includes(c)}
               onChange={() => setPicked(p => (p.includes(c) ? p.filter(x => x !== c) : [...p, c]))}
             />
@@ -55,10 +55,10 @@ export function RegionPanel({ sessionId, slideNumber, rect, onSaved, onClear }: 
           {saving === "explain" ? "Saving..." : "Explain Now"}
         </button>
       </div>
-      {!picked.length && <p className="mt-2 text-center text-sm text-gray-600">Pick at least one reason.</p>}
-      <button onClick={onClear} disabled={!!saving} className="mt-2 w-full p-2 text-sm font-bold text-gray-600 underline">
-        Clear and paint again
-      </button>
+      <p className="mt-2 flex items-center justify-between gap-3 text-sm text-gray-600">
+        <span>{picked.length ? "" : "Pick at least one reason."}</span>
+        <button onClick={onClear} disabled={!!saving} className="font-bold underline">Clear and paint again</button>
+      </p>
     </section>
   );
 }
