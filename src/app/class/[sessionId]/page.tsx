@@ -117,8 +117,10 @@ export default function Page() {
       className={className}
     />
   );
-  const pointButton = (className: string, label: ReactNode) => (
-    <button onClick={() => setPaintSlide(shown)} title="Point to the exact part you don't understand" className={className}>{label}</button>
+  // One button first: I'm Lost marks the whole slide. Only after that, the student can highlight the exact part.
+  const lostOnThisSlide = mine.some(s => s.kind === "lost" && s.slideNumber === shown);
+  const pointButton = (className: string, label: ReactNode) => lostOnThisSlide && (
+    <button onClick={() => setPaintSlide(shown)} title="Highlight the exact part you don't understand" className={className}>{label}</button>
   );
   // The last save message for this slide ("Saved ✓", errors); nothing otherwise.
   const message = msg?.slide === shown && (
@@ -207,11 +209,9 @@ export default function Page() {
             <div ref={setDock} className="mt-4 min-h-28 space-y-2">
               {idle && docked && (
                 <>
+                  {lostButton("w-full rounded-xl p-3 text-xl")}
                   {message}
-                  <div className="grid grid-cols-2 gap-3">
-                    {lostButton("w-full rounded-xl p-3 text-xl")}
-                    {pointButton("w-full rounded-xl border-2 border-emerald-900 bg-white p-2 font-bold leading-tight text-emerald-900", "✍️ Point to the exact part")}
-                  </div>
+                  {pointButton("w-full rounded-xl border-2 border-emerald-900 bg-white p-3 font-bold text-emerald-900", "✍️ Highlight the exact part")}
                 </>
               )}
             </div>
@@ -225,8 +225,9 @@ export default function Page() {
               <div className="space-y-3 rounded-2xl bg-white p-5">
                 <h2 className="font-bold">Lost on this slide?</h2>
                 {lostButton("w-full rounded-xl p-4 text-xl")}
-                {pointButton("w-full rounded-xl border-2 border-emerald-900 bg-white p-4 text-lg font-bold text-emerald-900", "✍️ Point to the exact part")}
                 {message}
+                {lostOnThisSlide && <p className="text-center text-sm text-gray-600">Want to be more specific?</p>}
+                {pointButton("w-full rounded-xl border-2 border-emerald-900 bg-white p-4 text-lg font-bold text-emerald-900", "✍️ Highlight the exact part")}
                 {switchClass}
               </div>
             )}
@@ -241,7 +242,7 @@ export default function Page() {
           {lostButton("grid h-20 w-20 place-items-center rounded-full p-2 text-base leading-tight shadow-lg")}
           {pointButton(
             "grid h-16 w-16 place-items-center rounded-full border-2 border-emerald-900 bg-white text-sm font-bold leading-tight text-emerald-900 shadow-lg",
-            <span><span className="text-xl">✍️</span><br />Point</span>,
+            <span><span className="text-xl">✍️</span><br /><span className="text-xs">Highlight</span></span>,
           )}
         </FloatingActions>
       )}
