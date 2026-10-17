@@ -60,15 +60,17 @@ function atLeast(start: number, end: number): [number, number] {
   return [from, MIN_SIDE];
 }
 
-// Like a highlighter in GoodNotes: a stroke drawn roughly along a line of text becomes one straight, even bar
-// at its average height. Circles, scribbles and strokes across several lines stay as drawn.
+// Like a highlighter in GoodNotes: a stroke drawn along one line of text (it wobbles up and down by no more than
+// about one brush width, and doesn't go back and forth) becomes one straight, even bar at its average height.
+// Circles, scribbles and strokes that fill several lines stay as drawn, so their box covers everything painted.
 export function neaten(stroke: Stroke, aspect: number): Stroke {
   const { r, points } = stroke;
   if (points.length < 2) return stroke;
   const xs = points.map(p => p.x), ys = points.map(p => p.y);
   const wide = Math.max(...xs) - Math.min(...xs);
   const tall = (Math.max(...ys) - Math.min(...ys)) / aspect; // in the same units as wide (slide widths)
-  if (wide < 3 * r || tall > Math.max(0.3 * wide, 2 * r)) return stroke; // a dot, or not along a line
+  const across = points.reduce((sum, p, i) => sum + (i ? Math.abs(p.x - points[i - 1].x) : 0), 0);
+  if (wide < 3 * r || tall > Math.max(2 * r, 0.025) || across > 1.5 * wide) return stroke; // a dot, a block, or back and forth
   const y = ys.reduce((sum, v) => sum + v, 0) / ys.length;
   return { r, points: [{ x: Math.min(...xs), y }, { x: Math.max(...xs), y }] };
 }
