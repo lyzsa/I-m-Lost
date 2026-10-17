@@ -1,6 +1,6 @@
 "use client";
 // Student live screen (PLAN.md steps B2 to B5). Owner: Person B.
-// While `following`, the phone shows the professor's live slide. Back/Forward stop following;
+// While `following`, the phone shows the professor's live slide. Prev/Next or a thumbnail stop following;
 // "Back to Live" (or browsing onto the live slide) starts following again.
 // Painting only works after tapping "Point to the exact part" (paint mode), so a stray thumb can't mark anything.
 // In paint mode the slide is held still, so the mark can't land on the wrong slide.
@@ -15,6 +15,7 @@ import { FloatingActions, type Toast } from "@/features/student/FloatingActions"
 import { LostButton } from "@/features/student/LostButton";
 import { BRUSH_MAX, BRUSH_MIN, PaintLayer, paintedBox, type Stroke } from "@/features/student/PaintLayer";
 import { RegionPanel } from "@/features/student/RegionPanel";
+import { SlideStrip } from "@/features/student/SlideStrip";
 import { rememberClass } from "@/features/student/lastClass";
 import { HomeLogo } from "@/features/professor/HomeLogo"; // shared with the professor screens so the logo matches
 
@@ -256,10 +257,14 @@ export default function Page() {
             <p className="mt-2 text-center text-sm text-gray-500">Tap your orange boxes to see the AI explanation again.</p>
           )}
 
-          <nav className="mt-3 grid grid-cols-2 gap-3">
-            <button onClick={() => browse(shown - 1)} disabled={shown === 1 || painting} className="rounded-xl bg-white p-4 text-lg font-bold shadow-sm">← Back</button>
-            <button onClick={() => browse(shown + 1)} disabled={shown === total || painting} className="rounded-xl bg-white p-4 text-lg font-bold shadow-sm">Forward →</button>
-          </nav>
+          <SlideStrip
+            slides={session.slides}
+            shown={shown}
+            live={ended ? null : live}
+            marked={new Set(mine.map(s => s.slideNumber))}
+            disabled={painting}
+            onGo={browse}
+          />
 
           {following && !painting && !ended && <p className="mt-3 text-center text-sm text-gray-500">Following the professor live</p>}
           {!wide && !painting && <div className="mt-2">{switchClass}</div>}
