@@ -4,6 +4,8 @@
 // Put it inside <SlideView>, only while the student is in paint mode (so a stray thumb can't mark anything).
 // Points are 0..1 fractions of the slide, so the paint stays on the same words when resized.
 // Each separate highlighted part becomes its own box, and a stroke along a line of text is straightened into a neat bar.
+// A quick tap (moves under 10 px and lifts within 0.35 s) paints nothing, so a stray touch can't make a mark:
+// drag, or press and hold, to paint.
 // Phones: one finger paints, two fingers pinch-zoom the page (the browser does the zooming).
 // iPad with Apple Pencil: once a pencil touches the slide, only the pencil paints; fingers scroll and pinch-zoom the page
 // like anywhere else in Safari (with momentum), even while the other hand is writing. Other pens: one finger scrolls.
@@ -20,27 +22,40 @@ const PAINT = "#facc15";
 // One box per highlighted part: each stroke gets its own box (grown by its brush size, kept inside the slide),
 // and strokes whose boxes overlap (e.g. two passes over the same words) share one box.
 // A very thin line (thin brush, a big screen, or zoomed in) still makes a box: each side is at least MIN_SIDE.
-export function paintedBoxes(strokes: Stroke[], aspect: number): Rect[] {
+// `members` are the indexes of the strokes inside each box (used to scale a part's ink, see BoxEditor).
+export type Part = { box: Rect; members: number[] };
+export function paintedParts(strokes: Stroke[], aspect: number): Part[] {
   const clamp = (v: number) => Math.max(0, Math.min(1, v));
-  let boxes = strokes.map(({ r, points }) => {
+  let parts: Part[] = strokes.map(({ r, points }, i) => {
     const ry = r * aspect; // aspect = slide width / height, so the brush is round in y too
     const xs = points.map(p => p.x), ys = points.map(p => p.y);
     const [x, width] = atLeast(clamp(Math.min(...xs) - r), clamp(Math.max(...xs) + r));
     const [y, height] = atLeast(clamp(Math.min(...ys) - ry), clamp(Math.max(...ys) + ry));
-    return { x, y, width, height };
+    return { box: { x, y, width, height }, members: [i] };
   });
   // Join overlapping boxes until none overlap.
   for (let merged = true; merged; ) {
     merged = false;
-    outer: for (let i = 0; i < boxes.length; i++)
-      for (let j = i + 1; j < boxes.length; j++)
-        if (overlap(boxes[i], boxes[j])) {
-          boxes = [...boxes.filter((_, k) => k !== i && k !== j), union(boxes[i], boxes[j])];
+    outer: for (let i = 0; i < parts.length; i++)
+      for (let j = i + 1; j < parts.length; j++)
+        if (overlap(parts[i].box, parts[j].box)) {
+          const joined = { box: union(parts[i].box, parts[j].box), members: [...parts[i].members, ...parts[j].members] };
+          parts = [...parts.filter((_, k) => k !== i && k !== j), joined];
           merged = true;
           break outer;
         }
   }
-  return boxes.sort((a, b) => a.y - b.y || a.x - b.x); // top to bottom, like reading
+  return parts.sort((a, b) => a.box.y - b.box.y || a.box.x - b.box.x); // top to bottom, like reading
+}
+
+export const paintedBoxes = (strokes: Stroke[], aspect: number): Rect[] => paintedParts(strokes, aspect).map(p => p.box);
+
+// Make some strokes bigger or smaller by `factor`, keeping `anchor` in place (ink and brush width both scale).
+export function scaleStrokes(strokes: Stroke[], members: number[], anchor: Point, factor: number): Stroke[] {
+  return strokes.map((s, i) => !members.includes(i) ? s : {
+    r: s.r * factor,
+    points: s.points.map(p => ({ x: anchor.x + (p.x - anchor.x) * factor, y: anchor.y + (p.y - anchor.y) * factor })),
+  });
 }
 
 const overlap = (a: Rect, b: Rect) =>
@@ -88,7 +103,7 @@ let applePencil = false;
 
 export function PaintLayer({ strokes, brush, pencilOnly, onPencil, onChange }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
-  const drawing = useRef<{ pointer: number; stroke: Stroke } | null>(null);
+  const drawing = useRef<{ pointer: number; stroke: Stroke; start: number; x: number; y: number; moved: number } | null>(null);
   const scrolling = useRef<{ pointer: number; x: number; y: number } | null>(null); // a finger scrolling in pencil mode
   const [nativeFingers, setNativeFingers] = useState(applePencil); // fingers scroll/zoom the page the browser's own way
 
@@ -148,6 +163,7 @@ export function PaintLayer({ strokes, brush, pencilOnly, onPencil, onChange }: P
     const current = drawing.current;
     if (!current || current.pointer !== e.pointerId) return;
     drawing.current = null;
+    if (current.moved < 10 && e.timeStamp - current.start < 350) { repaint(); return; } // a tap: not a mark
     const c = canvas.current!;
     const aspect = c.clientWidth / c.clientHeight;
     const next = [...strokes, neaten(current.stroke, aspect)];
@@ -176,7 +192,7 @@ export function PaintLayer({ strokes, brush, pencilOnly, onPencil, onChange }: P
         const zoom = window.visualViewport?.scale ?? 1;
         const r = brush / 2 / (e.currentTarget.getBoundingClientRect().width * zoom);
         const p = toSlideFraction(e, e.currentTarget);
-        drawing.current = { pointer: e.pointerId, stroke: { r, points: [p] } };
+        drawing.current = { pointer: e.pointerId, stroke: { r, points: [p] }, start: e.timeStamp, x: e.clientX, y: e.clientY, moved: 0 };
         line(r, p, p);
       }}
       onPointerMove={e => {
@@ -189,6 +205,7 @@ export function PaintLayer({ strokes, brush, pencilOnly, onPencil, onChange }: P
         const current = drawing.current;
         if (!current || current.pointer !== e.pointerId) return;
         const { r, points } = current.stroke;
+        current.moved = Math.max(current.moved, Math.hypot(e.clientX - current.x, e.clientY - current.y));
         const p = toSlideFraction(e, e.currentTarget);
         line(r, points[points.length - 1], p);
         points.push(p);
