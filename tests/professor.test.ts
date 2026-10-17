@@ -22,3 +22,9 @@ test("stats: Lost taps and boxes are separate; students are counted once; a box 
   ]);
   assert.deepEqual([s.lost, s.boxes, s.students, s.categories.Other, s.categories["Need an example"]], [1, 2, 2, 2, 1]);
 });
+
+test("heatmap list: merging live and loaded signals never duplicates a box", async () => {
+  const { mergeSignals } = await import("../src/features/professor/useSlideSignals");
+  const sig = (id: string) => ({ id, sessionId: "s", slideNumber: 1, studentId: "x", kind: "lost" as const, categories: [], createdAt: "" });
+  assert.deepEqual(mergeSignals([sig("a"), sig("b")], [sig("b"), sig("c")]).map(s => s.id), ["a", "b", "c"]);
+});

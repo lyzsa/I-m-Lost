@@ -4,13 +4,19 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getSession, subscribeToSession, type Session } from "@/lib/api";
 import { SlideView } from "@/components/SlideView";
+import { HeatmapLayer } from "@/features/professor/HeatmapLayer";
 import { HomeLogo } from "@/features/professor/HomeLogo";
 import { JoinCard } from "@/features/professor/JoinCard";
 import { LiveControls } from "@/features/professor/LiveControls";
+import { useSlideSignals } from "@/features/professor/useSlideSignals";
 
 export default function HostLivePage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const [session, setSession] = useState<Session | null>(); // undefined = loading, null = not found
+  // Heatmap toggle. Default: clean while presenting (students see the projector), heatmap otherwise.
+  // A manual choice only lasts for the current slide + phase.
+  const [heatChoice, setHeatChoice] = useState<{ key: string; show: boolean }>();
+  const signals = useSlideSignals(sessionId, session?.currentSlide ?? 1);
 
   useEffect(() => {
     let active = true;
@@ -30,6 +36,9 @@ export default function HostLivePage() {
     );
 
   const slide = session.slides.find(s => s.number === session.currentSlide) ?? session.slides[0];
+  const heatKey = `${session.currentSlide}:${session.phase}`;
+  const showHeat = heatChoice?.key === heatKey ? heatChoice.show : session.phase !== "presenting";
+  const boxCount = signals.filter(s => s.kind === "region").length;
 
   return (
     <main className="mx-auto max-w-7xl p-4 md:p-6">
@@ -41,7 +50,21 @@ export default function HostLivePage() {
         <span className="text-sm text-gray-600">Professor view</span>
       </header>
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <SlideView imageUrl={slide.imageUrl} alt={`Slide ${slide.number}`} />
+        <div>
+          <SlideView imageUrl={slide.imageUrl} alt={`Slide ${slide.number}`}>
+            {showHeat && <HeatmapLayer signals={signals} />}
+          </SlideView>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button className="rounded-xl bg-white px-4 py-2" onClick={() => setHeatChoice({ key: heatKey, show: !showHeat })}>
+              {showHeat ? "Hide heatmap (clean view)" : "Show heatmap"}
+            </button>
+            {showHeat && (
+              <span className="text-sm text-gray-600">
+                {boxCount ? `${boxCount} ${boxCount === 1 ? "box" : "boxes"} on this slide · darker = more overlap` : "No boxes on this slide yet"}
+              </span>
+            )}
+          </div>
+        </div>
         <aside className="space-y-4">
           <JoinCard code={session.code} />
           <LiveControls session={session} onChange={setSession} />
