@@ -43,6 +43,7 @@ export default function Page() {
   const [pencilOnly, setPencilOnly] = useState(false); // an Apple Pencil was used: fingers scroll, only the pencil paints
   const slideAspect = useRef(16 / 9); // the slide's width / height, from the paint layer (for undo)
   const [boxes, setBoxes] = useState<Rect[]>([]); // one per highlighted part
+  const [picking, setPicking] = useState(false); // phones: done highlighting, now picking reasons
   const [msg, setMsg] = useState<(Toast & { slide: number }) | null>(null); // last save error, for the slide it was made on (the ✓ on the button says "saved")
   const [wide, setWide] = useState(false); // laptop-sized screen: the controls go in a right-hand column
   const [dock, setDock] = useState<HTMLDivElement | null>(null); // spot at the bottom of the page on phones
@@ -111,6 +112,7 @@ export default function Page() {
     setStrokes([]);
     setBoxes([]);
     setPaintSlide(null);
+    setPicking(false);
   }
 
   function saved(signal: Signal) {
@@ -171,25 +173,35 @@ export default function Page() {
       {explain && <ExplainPanel explain={explain} onExplain={() => runExplain(explain.signalId, explain.slideNumber)} onClose={() => setExplain(null)} />}
       {painting && (
         <>
-          {/* Same look as the instructor's draw toolbar (DrawToolbar), with student-sized buttons */}
-          <div className="select-none space-y-1 rounded-xl bg-white p-1.5 text-sm shadow-sm">
-            <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 font-bold text-emerald-900"><PenIcon /> Highlighting</span>
-              <div className="flex items-center">
-                <button onClick={undoStroke} disabled={!strokes.length} className="rounded-lg px-2.5 py-2 hover:bg-gray-100 disabled:text-gray-400">Undo</button>
-                <span className="mx-1 h-6 w-px bg-gray-200" />
-                <button onClick={leavePaintMode} className="rounded-lg px-2.5 py-2 text-red-800 hover:bg-red-50">Cancel</button>
+          {/* Same look as the instructor's draw toolbar (DrawToolbar), with student-sized buttons.
+              Phones: the reasons only come after "Done highlighting", so they don't cover the slide while painting. */}
+          {picking ? (
+            <button onClick={() => setPicking(false)} className="text-sm font-bold text-emerald-900">‹ Keep highlighting</button>
+          ) : (
+            <div className="select-none space-y-1 rounded-xl bg-white p-1.5 text-sm shadow-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 font-bold text-emerald-900"><PenIcon /> Highlighting</span>
+                <div className="flex items-center">
+                  <button onClick={undoStroke} disabled={!strokes.length} className="rounded-lg px-2.5 py-2 hover:bg-gray-100 disabled:text-gray-400">Undo</button>
+                  <span className="mx-1 h-6 w-px bg-gray-200" />
+                  <button onClick={leavePaintMode} className="rounded-lg px-2.5 py-2 text-red-800 hover:bg-red-50">Cancel</button>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 px-1">
+                <span className="mr-1 text-gray-600">Brush</span>
+                {Object.entries(BRUSHES).map(([name, size]) => (
+                  <button key={name} onClick={() => setBrush(size)} aria-label={`${name} brush`} aria-pressed={brush === size}
+                    className={`rounded-lg px-2.5 py-2 ${brush === size ? "bg-gray-900 text-white" : "hover:bg-gray-100"}`}>{name}</button>
+                ))}
               </div>
             </div>
-            <div className="flex items-center gap-1 px-1">
-              <span className="mr-1 text-gray-600">Brush</span>
-              {Object.entries(BRUSHES).map(([name, size]) => (
-                <button key={name} onClick={() => setBrush(size)} aria-label={`${name} brush`} aria-pressed={brush === size}
-                  className={`rounded-lg px-2.5 py-2 ${brush === size ? "bg-gray-900 text-white" : "hover:bg-gray-100"}`}>{name}</button>
-              ))}
-            </div>
-          </div>
-          {boxes.length > 0 && (
+          )}
+          {!wide && !picking && boxes.length > 0 && (
+            <button onClick={() => setPicking(true)} className="w-full rounded-xl bg-emerald-900 p-3 font-bold text-white">
+              Done highlighting →
+            </button>
+          )}
+          {boxes.length > 0 && (wide || picking) && (
             <RegionPanel
               key={paintSlide}
               sessionId={session.id}
