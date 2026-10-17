@@ -1,6 +1,6 @@
 // POST /api/study-guide  {sessionId, studentId}  ->  {guide}   (TASKS.md step C4, used by My Review)
 // Builds the guide only from this student's own signals, grouped by slide.
-import { STUDY_GUIDE_SYSTEM, SIGNAL_COLUMNS, ask, db, describeMark, errorResponse, imageBudget, slideImage, slideText, type Part, type SignalRow, type SlideRow } from "../ai";
+import { STUDY_GUIDE_SYSTEM, SIGNAL_COLUMNS, ask, db, errorResponse, imageBudget, listMarks, slideImages, slideText, type Part, type SignalRow, type SlideRow } from "../ai";
 
 export const maxDuration = 120;
 
@@ -24,9 +24,9 @@ export async function POST(request: Request) {
     const content: Part[] = [];
     const budget = imageBudget();
     for (const slide of slides) {
-      const marks = signals.filter(s => s.slide_number === slide.slide_number).map(s => `- ${describeMark(s)}`).join("\n");
-      content.push({ type: "text", text: `${slideText(slide)}\nWhat the student marked on this slide:\n${marks}` },
-        ...(await slideImage(slide.image_url, budget)));
+      const marks = signals.filter(s => s.slide_number === slide.slide_number);
+      content.push({ type: "text", text: `${slideText(slide)}\nWhat the student marked on this slide:\n${listMarks(marks)}` },
+        ...(await slideImages(slide.image_url, marks, budget)));
     }
     content.push({ type: "text", text: "Write my study guide." });
 
