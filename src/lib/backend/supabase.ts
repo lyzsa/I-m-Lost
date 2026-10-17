@@ -4,7 +4,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Category } from "../domain";
 import type { Annotation, AnnotationEvent, LivePhase, NewAnnotation, NewSignal, Session, Signal, Slide, Unsubscribe } from "../types";
-import { ERRORS, cleanOtherText, normalizeCode, randomCode, validateSignal } from "./rules";
+import { ERRORS, cleanOtherText, normalizeCode, randomCode, validateAnnotation, validateSignal } from "./rules";
 
 const STUDENT_KEY = "lost-student-id";
 const BUCKET = "slides";
@@ -246,10 +246,101 @@ export async function makeStudyGuide(sessionId: string): Promise<string> {
 }
 
 // ---------- Instructor annotations (pen strokes) ----------
-// TEMPORARY until supabase/migrations/0003_annotations.sql is run and the real version lands:
-// reads show nothing and writes say what's missing, so pages don't crash in real mode.
-const ANNOTATIONS_NOT_READY = "Drawing on slides isn't set up on the live site yet";
-export async function addAnnotation(_a: NewAnnotation): Promise<Annotation> { throw new Error(ANNOTATIONS_NOT_READY); }
-export async function getAnnotations(_sessionId: string, _slideNumber: number): Promise<Annotation[]> { return []; }
-export async function removeAnnotations(_sessionId: string, _ids: string[]): Promise<void> { throw new Error(ANNOTATIONS_NOT_READY); }
-export function subscribeToAnnotations(_sessionId: string, _onEvent: (e: AnnotationEvent) => void): Unsubscribe { return () => {}; }
+// Table: supabase/migrations/0003_annotations.sql. Removing a stroke sets removed_at (soft delete),
+// because Supabase can't filter DELETE events by session but can filter UPDATE events.
+
+type AnnotationRow = {
+  id: string; session_id: string; slide_number: number; points: { x: number; y: number }[];
+  color: string; width: number; removed_at: string | null; created_at: string;
+};
+const ANNOTATION_COLUMNS = "id, session_id, slide_number, points, color, width, removed_at, created_at";
+
+function toAnnotation(r: AnnotationRow): Annotation {
+  return { id: r.id, sessionId: r.session_id, slideNumber: r.slide_number, points: r.points, color: r.color, width: r.width, createdAt: r.created_at };
+}
+
+export async function addAnnotation(input: NewAnnotation): Promise<Annotation> {
+  const session = await getSession(input.sessionId);
+  if (!session) throw new Error(ERRORS.noSession);
+  validateAnnotation(input, session);
+  const row = {
+    id: input.id, session_id: input.sessionId, slide_number: input.slideNumber,
+    points: input.points.map(p => ({ x: p.x, y: p.y })), color: input.color, width: input.width,
+  };
+  // ignoreDuplicates: re-sending a stroke that's already saved (a retry) inserts nothing.
+  const { data, error } = await db().from("annotations").upsert(row, { onConflict: "id", ignoreDuplicates: true }).select(ANNOTATION_COLUMNS);
+  if (error) throw new Error(error.message);
+  const saved = (data as AnnotationRow[])[0]
+    ?? check(await db().from("annotations").select(ANNOTATION_COLUMNS).eq("id", input.id).single()) as AnnotationRow;
+  return toAnnotation(saved);
+}
+
+export async function getAnnotations(sessionId: string, slideNumber: number): Promise<Annotation[]> {
+  if (!isUuid(sessionId)) return [];
+  const rows = check(await db().from("annotations").select(ANNOTATION_COLUMNS)
+    .eq("session_id", sessionId).eq("slide_number", slideNumber).is("removed_at", null).order("created_at")) as AnnotationRow[];
+  return rows.map(toAnnotation);
+}
+
+export async function removeAnnotations(sessionId: string, ids: string[]): Promise<void> {
+  const valid = ids.filter(isUuid);
+  if (!isUuid(sessionId) || !valid.length) return;
+  check(await db().from("annotations").update({ removed_at: new Date().toISOString() })
+    .eq("session_id", sessionId).in("id", valid).is("removed_at", null));
+}
+
+// Events come from Supabase Realtime: a new row is "added", a row whose removed_at gets set is "removed".
+// Strokes that already exist when you subscribe aren't sent (load them with getAnnotations).
+// A phone that slept or lost its connection may have missed events, so on every (re)connect and when the page
+// becomes visible again the stroke list is re-read and anything missed is sent.
+export function subscribeToAnnotations(sessionId: string, onEvent: (e: AnnotationEvent) => void): Unsubscribe {
+  if (!isUuid(sessionId)) return () => {};
+  let closed = false;
+  const known = new Set<string>(); // every stroke seen so far, removed or not
+  const shown = new Set<string>(); // strokes the page has been told about and not told were removed
+
+  const added = (r: AnnotationRow) => {
+    if (closed || known.has(r.id)) return;
+    known.add(r.id);
+    if (r.removed_at) return; // added and removed before we looked: nothing to show
+    shown.add(r.id);
+    onEvent({ type: "added", annotation: toAnnotation(r) });
+  };
+  const removed = (ids: string[]) => {
+    ids.forEach(id => known.add(id));
+    const gone = ids.filter(id => shown.delete(id));
+    if (!closed && gone.length) onEvent({ type: "removed", ids: gone });
+  };
+
+  type Brief = { id: string; removed_at: string | null };
+  const list = async () => check(await db().from("annotations").select("id, removed_at").eq("session_id", sessionId)) as Brief[];
+  // What already exists right now: remembered, not sent.
+  const baseline = list().then(rows => rows.forEach(r => { known.add(r.id); if (!r.removed_at) shown.add(r.id); }));
+  const resync = async () => {
+    await baseline;
+    const rows = await list();
+    const missedIds = rows.filter(r => !r.removed_at && !known.has(r.id)).map(r => r.id);
+    if (missedIds.length) {
+      const missed = check(await db().from("annotations").select(ANNOTATION_COLUMNS).in("id", missedIds).order("created_at")) as AnnotationRow[];
+      missed.forEach(added);
+    }
+    removed(rows.filter(r => r.removed_at && shown.has(r.id)).map(r => r.id));
+  };
+  const safeResync = () => { resync().catch(err => console.error("LOST: couldn't re-read annotations", err)); };
+  baseline.catch(err => console.error("LOST: couldn't load annotations", err));
+
+  const filter = `session_id=eq.${sessionId}`;
+  const channel = db().channel(`annotations:${sessionId}:${crypto.randomUUID()}`)
+    .on<AnnotationRow>("postgres_changes", { event: "INSERT", schema: "public", table: "annotations", filter }, p => added(p.new))
+    .on<AnnotationRow>("postgres_changes", { event: "UPDATE", schema: "public", table: "annotations", filter },
+      p => { if (p.new.removed_at) removed([p.new.id]); })
+    .subscribe(status => { if (status === "SUBSCRIBED") safeResync(); });
+  const onVisible = () => { if (document.visibilityState === "visible") safeResync(); };
+  if (typeof document !== "undefined") document.addEventListener("visibilitychange", onVisible);
+
+  return () => {
+    closed = true;
+    if (typeof document !== "undefined") document.removeEventListener("visibilitychange", onVisible);
+    void db().removeChannel(channel);
+  };
+}
