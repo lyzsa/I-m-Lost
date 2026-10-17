@@ -38,10 +38,6 @@ function check<T>({ data, error }: { data: T | null; error: { message: string } 
   return data as T;
 }
 
-function notBuilt(name: string): never {
-  throw new Error(`${name}: real backend not built yet (TASKS.md step C4). Set NEXT_PUBLIC_USE_MOCK=true in .env.local.`);
-}
-
 // A mistyped URL would make Postgres reject the id instead of simply finding nothing.
 const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
@@ -227,5 +223,23 @@ export async function getMySignals(sessionId: string): Promise<Signal[]> {
   return rows.map(toSignal);
 }
 
-export async function explainSignal(_signalId: string): Promise<string> { return notBuilt("explainSignal"); }
-export async function makeStudyGuide(_sessionId: string): Promise<string> { return notBuilt("makeStudyGuide"); }
+// The AI runs in server routes (src/app/api) so the key stays secret. Their {error} messages are shown as is.
+async function callAi<T>(path: string, body: object): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  } catch {
+    throw new Error("AI is unavailable right now");
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "AI is unavailable right now");
+  return data as T;
+}
+
+export async function explainSignal(signalId: string): Promise<string> {
+  return (await callAi<{ explanation: string }>("/api/explain", { signalId })).explanation;
+}
+
+export async function makeStudyGuide(sessionId: string): Promise<string> {
+  return (await callAi<{ guide: string }>("/api/study-guide", { sessionId, studentId: getMyStudentId() })).guide;
+}
