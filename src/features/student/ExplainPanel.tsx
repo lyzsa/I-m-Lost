@@ -13,7 +13,7 @@ export function ExplainPanel({ explain, onRetry, onClose }: Props) {
         <button onClick={onClose} className="rounded-lg px-3 py-1 text-sm font-bold text-gray-600">Close</button>
       </div>
       {explain.status === "thinking" && <p className="mt-2 text-gray-600">Thinking...</p>}
-      {explain.status === "done" && <p className="mt-2 whitespace-pre-wrap">{explain.text}</p>}
+      {explain.status === "done" && <p className="mt-2 max-h-[40vh] overflow-y-auto whitespace-pre-wrap">{explain.text}</p>}
       {explain.status === "error" && (
         <>
           <p className="mt-2 text-red-700">Saved. Couldn&apos;t get an explanation.</p>

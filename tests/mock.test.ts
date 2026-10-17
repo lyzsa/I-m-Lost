@@ -59,7 +59,7 @@ test("region signals are validated and reach subscribeToSignals", async () => {
   const stop = mock.subscribeToSignals(mock.DEMO_SESSION_ID, s => got.push(s.id));
   const id = crypto.randomUUID();
   await mock.submitSignal({ id, sessionId: mock.DEMO_SESSION_ID, slideNumber: 2, kind: "region",
-    rect: { x: .1, y: .1, width: .3, height: .2 }, categories: ["Need an example", "Other"] });
+    rect: { x: .1, y: .1, width: .3, height: .2 }, categories: ["Need an example", "Other"], otherText: "what is &x?" });
   await tick();
   stop();
   assert.deepEqual(got, [id]);
@@ -67,6 +67,21 @@ test("region signals are validated and reach subscribeToSignals", async () => {
     kind: "region", rect: { x: .9, y: .1, width: .3, height: .2 }, categories: ["Other"] }), /outside the slide/);
   await assert.rejects(mock.submitSignal({ id: crypto.randomUUID(), sessionId: mock.DEMO_SESSION_ID, slideNumber: 2,
     kind: "region", rect: { x: .1, y: .1, width: .3, height: .2 }, categories: [] }), /at least one category/);
+});
+
+test("Other needs the student's own words (1-200 chars); they're trimmed and saved", async () => {
+  const box = { sessionId: mock.DEMO_SESSION_ID, slideNumber: 1, kind: "region" as const, rect: { x: .1, y: .1, width: .3, height: .2 } };
+  const submit = (extra: { categories: ("Other" | "Need an example")[]; otherText?: string }) =>
+    mock.submitSignal({ ...box, id: crypto.randomUUID(), ...extra });
+  await assert.rejects(submit({ categories: ["Other"] }), /what's confusing/);
+  await assert.rejects(submit({ categories: ["Other"], otherText: "   " }), /what's confusing/);
+  await assert.rejects(submit({ categories: ["Other"], otherText: "x".repeat(201) }), /under 200/);
+  await assert.rejects(submit({ categories: ["Need an example"], otherText: "hi" }), /when you pick Other/);
+  await assert.rejects(mock.submitSignal({ id: crypto.randomUUID(), sessionId: mock.DEMO_SESSION_ID, slideNumber: 1,
+    kind: "lost", categories: [], otherText: "hi" }), /no box or categories/);
+  const saved = await submit({ categories: ["Other"], otherText: "  why is it &x?  " });
+  assert.equal(saved.otherText, "why is it &x?");
+  assert.equal((await mock.getMySignals(mock.DEMO_SESSION_ID))[0].otherText, "why is it &x?");
 });
 
 test("students only see their own signals; explanation is saved on the signal", async () => {
