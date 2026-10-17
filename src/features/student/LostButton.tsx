@@ -1,12 +1,12 @@
 "use client";
-// I'm Lost (PLAN.md step B3): one tap = "I'm lost on this slide". No box, no categories.
+// I'm Lost (docs/build-plan.md step B3): one tap = "I'm lost on this slide". No box, no categories.
 // A failed save keeps the same id, so "Try again" can't count twice.
 // Render it with key={slideNumber} so it starts fresh on every slide. Its messages go to onStatus,
 // so the page can show them in one line above the floating buttons.
 import { useState } from "react";
 import { submitSignal, type Signal } from "@/lib/api";
 
-const ALREADY = "You already tapped I'm Lost on this slide"; // exact message from PLAN.md section 4.2
+const ALREADY = "You already tapped I'm Lost on this slide"; // exact message from docs/build-plan.md section 4.2
 
 type Props = {
   sessionId: string;

@@ -1,6 +1,6 @@
-# LOST: 10-Hour Build Plan
+# LOST: 10-Hour Build Plan (historical)
 
-This is the plan for the 10-hour hackathon. It used to be called `PLAN.md`; the old 36-hour task list that was in this file is still in Git history. The older docs (`docs/architecture.md`, `docs/PRD-draft.md`, `docs/CONTINUE.md`) describe a 36-hour version with security work we don't have time for. The product ideas in `docs/decisions.md` still apply. The technical approach is the one below.
+> **This is the plan the team built from, kept as a record.** It was written before coding started (it was first called `PLAN.md`, then `TASKS.md`). The product changed during the build: for example, students highlight instead of drawing boxes, the AI is Google Gemini instead of Claude, and the instructor can draw on slides. For what the app does today, read the [README](../README.md), [architecture.md](architecture.md) and [decisions.md](decisions.md). The `/demo` sandbox it mentions has since been removed. Section and step numbers below (A1, B4, C2, section 4.6) are still referenced from code comments.
 
 **How to use this file**
 - At kickoff, all three people read sections 0 to 6 together (about 25 minutes).

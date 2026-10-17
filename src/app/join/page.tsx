@@ -1,4 +1,4 @@
-// Student join page (PLAN.md step B1). Owner: Person B.
+// Student join page (docs/build-plan.md step B1). Owner: Person B.
 // JoinForm reads ?code= from the URL, so Next.js needs it inside <Suspense> for `npm run build`.
 import { Suspense } from "react";
 import JoinForm from "@/features/student/JoinForm";

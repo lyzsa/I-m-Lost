@@ -1,5 +1,5 @@
 "use client";
-// Student live screen (PLAN.md steps B2 to B5). Owner: Person B.
+// Student live screen (docs/build-plan.md steps B2 to B5). Owner: Person B.
 // While `following`, the phone shows the professor's live slide. Prev/Next or a thumbnail stop following;
 // "Back to Live" (or browsing onto the live slide) starts following again.
 // Painting only works after tapping "Point to the exact part" (paint mode), so a stray thumb can't mark anything.

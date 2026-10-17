@@ -1,4 +1,4 @@
-// Server-only helpers shared by /api/explain and /api/study-guide (TASKS.md step C4, using Google Gemini).
+// Server-only helpers shared by /api/explain and /api/study-guide (docs/build-plan.md step C4, using Google Gemini).
 // Only these server routes read GEMINI_API_KEY; it never reaches the browser.
 // Gemini Interactions API: https://ai.google.dev/api/interactions
 import { createClient } from "@supabase/supabase-js";

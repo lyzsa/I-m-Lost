@@ -1,4 +1,4 @@
-// REAL backend (used when NEXT_PUBLIC_USE_MOCK=false). Person C fills this in: TASKS.md step C2 (data) and C4 (AI).
+// REAL backend (used when NEXT_PUBLIC_USE_MOCK=false). Person C fills this in: docs/build-plan.md step C2 (data) and C4 (AI).
 // Every function must match the Backend type in src/lib/api.ts; `npm run typecheck` fails if it doesn't.
 // Errors and validation come from ./rules so the real app behaves exactly like the mock.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -10,7 +10,7 @@ const STUDENT_KEY = "lost-student-id";
 const BUCKET = "slides";
 const UNIQUE_VIOLATION = "23505"; // Postgres error code for "that value already exists"
 
-// Database rows use snake_case columns (TASKS.md section 5); the contract uses camelCase.
+// Database rows use snake_case columns (docs/build-plan.md section 5); the contract uses camelCase.
 type SessionRow = { id: string; code: string; title: string; slide_count: number; current_slide: number; phase: LivePhase };
 type SlideRow = { slide_number: number; image_url: string; extracted_text: string };
 type SignalRow = {

@@ -1,5 +1,5 @@
 "use client";
-// The AI explanation for one saved mark (PLAN.md step B5). The mark is saved before the AI is asked,
+// The AI explanation for one saved mark (docs/build-plan.md step B5). The mark is saved before the AI is asked,
 // so if the AI fails the student still finds the mark in My Review.
 // "ask" = the student tapped one of their own boxes that has no explanation yet; nothing is sent until they press the button.
 // text = the explanation ("done"), or why the AI failed ("error", may be empty).

@@ -1,5 +1,5 @@
 "use client";
-// My Review (PLAN.md step B6). Owner: Person B.
+// My Review (docs/build-plan.md step B6). Owner: Person B.
 // Only this student's own marks, grouped by slide, plus an AI study guide made from them.
 // AI explanations start folded; a 💡 next to each slide (level with its box) or the item itself opens one.
 import Link from "next/link";

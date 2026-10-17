@@ -20,7 +20,7 @@ export function normalizeCode(code: string): string {
   return code.trim().toUpperCase();
 }
 
-// Throws a readable Error if the signal breaks a rule. Same checks as the database in TASKS.md section 5.
+// Throws a readable Error if the signal breaks a rule. Same checks as the database in docs/build-plan.md section 5.
 export function validateSignal(s: NewSignal, session: Session): void {
   if (s.slideNumber < 1 || s.slideNumber > session.slides.length) throw new Error("That slide doesn't exist");
   if (s.categories.some(c => !categories.includes(c))) throw new Error("Unknown category");

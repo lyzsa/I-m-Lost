@@ -1,34 +1,84 @@
-# LOST 决策记录
+# Product decisions
 
-依据：用户在「课堂困惑检测方案」及本次请求中明确的决策。记录日期：2026-10-16。旧对话链接：chatgpt-conversation://6ad2e178-30e0-83ea-8ecf-df3f0be80c1e 。本文件足够用于后续开发，无需重新获取聊天。
+This file records what the team decided and why, so nobody has to dig through chat history. The first three sections were written on 2026-10-16, before coding started (translated from the original Chinese). The last section lists the decisions made while building.
 
-## 已确认，不重复讨论
+## Confirmed before the build
 
-- 目标是三人 36 小时做出课堂辅助工具；当前不做商业模式、采购、市场验证。
-- 教授上传 PDF，创建课堂，控制 live slide。学生 code/QR join。
-- 每页切换前确认反馈；采用 Presenting → Reviewing → Next 的集成流程，无额外强制弹窗。教授自行决定是否补讲。
-- 学生默认同步，可自由浏览，Back to Live 恢复同步。
-- I'm Lost 不要求框选，仅计入该页 count；有框选和无框选的反馈同时显示。
-- 区域框选支持多选困惑类型，教授看到所有选项数量。
-- 教授 clean/heatmap 切换；重叠越多越深；点击困惑集中区域看分类数量。
-- 教授端只需要数据统计，无需 AI 解释困惑原因或教学建议。
-- 当前页优先实时分析；所有页热图、信号保留用于历史。
-- Explain Now 可选，默认 Save for Later；课后 AI Personalized Study Guide。
-- AI 使用当前页内容 + 最近已转录讲解，标注来源；录音可选，无转录时降级为 slide-only。
-- 图、公式、非文本可框选；不强制 AI 理解非文本。
+- The goal is a classroom tool built by a team of three for a hackathon. Business model, sales and market validation are out of scope.
+- The instructor uploads a PDF, creates a class and controls the live slide. Students join with a code or a QR code.
+- Feedback is checked before each slide change: **Presenting → Reviewing → Next**, with no extra forced pop-up. The instructor decides whether to explain again.
+- Students follow the live slide by default, can browse other slides freely, and return with **Back to Live**.
+- **I'm Lost needs no box.** It only counts toward that slide. Feedback with and without a marked area is shown side by side.
+- A marked area can have **several reasons**, and the instructor sees the count for every reason.
+- The instructor can switch between a **clean view and a heatmap**. The more marks overlap, the darker the area. Clicking a busy area shows its reason counts.
+- The instructor side gets **statistics only**: no AI guesses about why students are confused and no teaching advice.
+- The current slide is analysed live. Heatmaps and marks for every slide are kept for later.
+- **Explain Now is optional; Save for Later is the default.** After class, the AI writes a personal study guide.
+- The AI uses the current slide's content and, if available, the recent transcribed lecture, and cites its sources. Recording is optional; without a transcript the AI works from the slide alone.
+- Figures, formulas and other non-text content can be marked. The AI is not required to understand non-text content.
 
-## 实现默认值（可调整，不冒充已确认）
+## Defaults chosen before the build (could be changed)
 
-- 初始分类：I don’t understand / Need an example / Why does this work? / Other。前对话第四项未完整展示，Other 是暂定值。
-- 快捷 Lost 每学生每页最多一条；区域可多条，每个 signal 每分类计一次。需后端幂等保证。
-- 反馈绑定学生正在看的页，脱离 live 时也一样；服务器验证页属于本课堂。
-- 课后可处理旧页反馈，实时教授面板默认当前 live 页。
-- 内部使用 sessionId + 从 1 开始的 slideNumber，矩形坐标归一化到 0..1。
-- MVP 先矩形叠加；自动连通聚类可在核心闭环后做。点选统计与整簇统计应明确区分。
-- 最后一页 Review 后结束课堂，不能越界；demo 为保持简单停留在 Reviewing。
-- 教授身份使用 Supabase Auth；学生使用 anonymous Auth + 成员关系。加入码通过服务端 RPC 验证，不作为授权令牌。
-- 不实现强制每个学生使用的行政机制。可选录音需显式开启并有可见状态。
+- Reasons: *I don't understand*, *Need an example*, *Why does this work?*, *Other*. (*Other* was a placeholder at first; see below.)
+- At most one I'm Lost per student per slide. A student can mark many areas. Each reason counts once per mark. The backend must make retries safe.
+- Feedback belongs to the slide the student is looking at, even when they have browsed away from the live slide.
+- Internally, a class is identified by its id and slides are numbered from 1. Marked areas are stored as fractions (0 to 1) of the slide, so they line up on any screen size.
+- No mechanism to force students to use the app. Recording, if built, must be switched on explicitly and show that it is on.
 
-## 待实现时决定
+## Open questions at kickoff, and how they were resolved
 
-AI 供应商 / 模型、转录供应商、数据保留期限、教授是否需单独投影 clean view、匿名学生跨设备恢复方案。此前 Q30/Q32 的选项正文缺失，不从 A/B 猜测需求；以本次用户给出的行为为准。
+| Question | Outcome |
+| --- | --- |
+| AI provider and model | Google Gemini (`gemini-3.8-flash`, falling back to `gemini-3.5-flash-lite`) |
+| Transcription provider | Not built. The AI works from the slide image and text. |
+| How long data is kept | Not decided. Data stays in the team's Supabase project. |
+| A separate clean view for the projector | Not needed. The heatmap toggle gives a clean view on the same screen. |
+| How anonymous students get back to a class | The device remembers the last class; no account. |
+
+## Decided during the build
+
+### Scope (10-hour build)
+
+- The original plan assumed 36 hours. For 10 hours we cut logins, row-level security, server-side permission checks and transcription. Security is demo-level and the README says so.
+- To let three people work in parallel, all data goes through one fixed list of functions (`src/lib/api.ts`), with a mock backend in the browser until the real one was ready.
+
+### Students marking confusion
+
+- **Highlight instead of drawing a box.** Students paint over the confusing part like a highlighter. The saved mark is the box around the paint, so the data shape did not change.
+- **One I'm Lost button first; highlighting the exact part comes after.** Most students only need the one tap. Students who want to be specific then highlight.
+- Highlighting behaves like GoodNotes: each separate highlighted part becomes its own mark, a stroke along one line of text is straightened into a neat bar, a part can be resized by its corner handle (which scales the ink), and quick taps don't paint, so stray touches leave no marks.
+- With an Apple Pencil, only the pencil highlights and fingers scroll and zoom. On phones, the reason picker opens only after **Done highlighting**, so it doesn't cover the slide.
+- **Reasons are optional.** Saving with none picked counts as *I don't understand*.
+- **Other means typing your own question** (1 to 200 characters). The instructor sees these words anonymously. The AI gets them too, marked as student text that it must answer but never follow as instructions.
+
+### What the instructor sees
+
+- **Confusion spots instead of click-a-point counts.** Overlapping highlights are grouped into numbered spots, and a spot only appears once enough students have marked it (2 by default). This keeps one student's scribble from looking like a class-wide problem.
+- **Hover shows a spot's window; click pins it.** Showing every window at once was too cluttered.
+- The side panel covers the whole slide; per-spot detail lives in the spot windows.
+- **Donut charts** for reasons, with one fixed colour per reason on every screen, checked for colour-blind separation.
+- The instructor can **jump to any slide** (students follow) and **end the class at any time**, not only after the last slide.
+- The end-of-class summary has a slider labelled by **fewer / more students' annotations** instead of a technical "sensitivity" setting.
+- The UI says **instructor**, not professor, on the instructor side.
+
+### Instructor drawing
+
+- The instructor can **draw on the slide while explaining**, and every student sees the ink live. Strokes are saved like student marks, but flowing the other way. Undo and Clear hide strokes instead of deleting them.
+- On iPad the Apple Pencil draws and fingers move and zoom, as in GoodNotes or Notability. On phones one finger draws and two fingers move and zoom. While drawing, nothing else on the page can be selected, so a long press doesn't open the Copy menu.
+
+### AI
+
+- **Gemini instead of Claude**, the team's choice during step C4.
+- The AI explained the line next to the marked one on dense slides. Fix: it now also gets a **close-up of the marked area** and the slide with that area outlined in red.
+- Answers are **plain text with textbook-style Unicode math**, because the student screens show plain text.
+- Every request has a **time limit, one quick retry and a fallback model**, so a slow or busy model gives the student a clear message instead of a timeout.
+- Explanations stay available: a 💡 beside the slide, tapping your own mark, an end-of-class recap, and My Review.
+
+### No logins
+
+- Instructors find their classes on the device they started them on. Students' devices remember the last class they joined.
+
+### Technical
+
+- PDFs are converted in the browser with pdf.js's **legacy build**, because the normal build failed on Safari, iPhone and iPad.
+- The mock backend shrinks slide images to fit in browser storage.
