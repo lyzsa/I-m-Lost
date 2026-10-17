@@ -98,7 +98,11 @@ export default function Page() {
             <ul className="mt-3 space-y-3">
               {items.map(s => (
                 <li key={s.id} className="rounded-lg bg-gray-50 p-3">
-                  <p className="font-bold">{s.kind === "lost" ? "I'm Lost on this slide" : s.categories.join(" · ")}</p>
+                  <p className="font-bold">
+                    {s.kind === "lost"
+                      ? "I'm Lost on this slide"
+                      : s.categories.map(c => (c === "Other" && s.otherText ? `Other: "${s.otherText}"` : c)).join(" · ")}
+                  </p>
                   {s.explanation ? (
                     <p className="mt-2 whitespace-pre-wrap text-sm">{s.explanation}</p>
                   ) : s.kind === "region" && (
