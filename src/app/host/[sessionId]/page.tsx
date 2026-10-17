@@ -67,7 +67,7 @@ export default function HostLivePage() {
           <HomeLogo />
           <h1 className="text-2xl font-bold">{session.title}</h1>
         </div>
-        <span className="text-sm text-gray-600">Professor view</span>
+        <span className="text-sm text-gray-600">Instructor&apos;s view</span>
       </header>
       {/* minmax(0,1fr): never let a large slide image push the side panel off screen */}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">

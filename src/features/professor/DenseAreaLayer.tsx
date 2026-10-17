@@ -50,3 +50,18 @@ export function DenseAreaLayer({ areas, onOpenResponses }: { areas: DenseArea[];
     </>
   );
 }
+
+// Just the numbered outlines (no windows), for small snapshots such as the end-of-class summary.
+export function ClusterOutlines({ areas }: { areas: DenseArea[] }) {
+  return (
+    <>
+      {areas.map((a, i) => (
+        <div key={i}>
+          <RectBox rect={a.bounds} className="rounded-md border-2 border-dashed border-emerald-800" />
+          <span className="pointer-events-none absolute grid h-5 w-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-emerald-800 text-xs font-bold text-white"
+            style={{ left: `${a.bounds.x * 100}%`, top: `${a.bounds.y * 100}%` }}>{i + 1}</span>
+        </div>
+      ))}
+    </>
+  );
+}
