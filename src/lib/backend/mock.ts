@@ -4,11 +4,12 @@
 // - A ready-made class exists: code DEMO01, 3 slides.
 // - Reset everything: in the browser console run  localStorage.removeItem("lost-mock-db-v1")  and refresh.
 // - Make AI calls fail (to test error states): localStorage.setItem("lost-mock-fail-ai", "1")
-import type { LivePhase, NewSignal, Session, Signal, Unsubscribe } from "../types";
-import { ERRORS, cleanOtherText, normalizeCode, randomCode, validateSignal } from "./rules";
+import type { Annotation, AnnotationEvent, LivePhase, NewAnnotation, NewSignal, Session, Signal, Unsubscribe } from "../types";
+import { ERRORS, cleanOtherText, normalizeCode, randomCode, validateAnnotation, validateSignal } from "./rules";
 
 type Member = { sessionId: string; studentId: string; name: string };
-type DB = { sessions: Session[]; signals: Signal[]; members: Member[] };
+type StoredAnnotation = Annotation & { removedAt?: string }; // removed strokes are kept but hidden, like the real database
+type DB = { sessions: Session[]; signals: Signal[]; members: Member[]; annotations: StoredAnnotation[] };
 
 const DB_KEY = "lost-mock-db-v1";
 const STUDENT_KEY = "lost-student-id";
@@ -34,11 +35,12 @@ const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const hasWindow = () => typeof window !== "undefined";
 
 function read(): DB {
-  let db: DB = { sessions: [], signals: [], members: [] };
+  let db: DB = { sessions: [], signals: [], members: [], annotations: [] };
   try {
     const raw = globalThis.localStorage?.getItem(DB_KEY);
     if (raw) db = JSON.parse(raw);
   } catch { /* corrupted or unavailable: start fresh */ }
+  db.annotations ??= []; // data saved before annotations existed
   if (!db.sessions.some(s => s.id === DEMO_SESSION_ID)) db.sessions.unshift(demoSession());
   return db;
 }
@@ -228,4 +230,72 @@ export async function makeStudyGuide(sessionId: string): Promise<string> {
       return `\nSlide ${n}\n- You marked ${items.length} item(s): ${items.map(s => s.kind === "lost" ? "I'm Lost" : s.categories.join(" + ") + (s.otherText ? ` ("${s.otherText}")` : "")).join("; ")}\n- Practice question: (the real AI writes one here)\n- Source: Slide ${n}`;
     }),
   ].join("\n");
+}
+
+// ---------- Instructor annotations (pen strokes) ----------
+
+function visible(a: StoredAnnotation): Annotation {
+  return { id: a.id, sessionId: a.sessionId, slideNumber: a.slideNumber, points: a.points, color: a.color, width: a.width, createdAt: a.createdAt };
+}
+
+export async function addAnnotation(input: NewAnnotation): Promise<Annotation> {
+  await wait(100);
+  const db = read();
+  const existing = db.annotations.find(a => a.id === input.id);
+  if (existing) return visible(existing); // a retry of a stroke that's already saved: don't add it twice
+  const session = db.sessions.find(s => s.id === input.sessionId);
+  if (!session) throw new Error(ERRORS.noSession);
+  validateAnnotation(input, session);
+  const annotation: Annotation = {
+    id: input.id,
+    sessionId: input.sessionId,
+    slideNumber: input.slideNumber,
+    points: input.points.map(p => ({ x: p.x, y: p.y })),
+    color: input.color,
+    width: input.width,
+    createdAt: new Date().toISOString(),
+  };
+  db.annotations.push(annotation);
+  write(db);
+  return annotation;
+}
+
+// Stored in the order they were drawn, so this is oldest first.
+export async function getAnnotations(sessionId: string, slideNumber: number): Promise<Annotation[]> {
+  await wait(50);
+  return read().annotations.filter(a => a.sessionId === sessionId && a.slideNumber === slideNumber && !a.removedAt).map(visible);
+}
+
+export async function removeAnnotations(sessionId: string, ids: string[]): Promise<void> {
+  await wait(50);
+  const db = read();
+  const removedAt = new Date().toISOString();
+  let changed = false;
+  for (const a of db.annotations) {
+    if (a.sessionId === sessionId && ids.includes(a.id) && !a.removedAt) { a.removedAt = removedAt; changed = true; }
+  }
+  if (changed) write(db);
+}
+
+// Like subscribeToSignals: strokes added or removed after subscribing, on every slide of the class.
+export function subscribeToAnnotations(sessionId: string, onEvent: (e: AnnotationEvent) => void): Unsubscribe {
+  const mine = read().annotations.filter(a => a.sessionId === sessionId);
+  const known = new Set(mine.map(a => a.id));                      // every stroke seen so far, removed or not
+  const shown = new Set(mine.filter(a => !a.removedAt).map(a => a.id)); // strokes the page currently draws
+  return listen(() => {
+    const removed: string[] = [];
+    for (const a of read().annotations) {
+      if (a.sessionId !== sessionId) continue;
+      if (!known.has(a.id)) {
+        known.add(a.id);
+        if (a.removedAt) continue; // added and removed before we looked: nothing to show
+        shown.add(a.id);
+        onEvent({ type: "added", annotation: visible(a) });
+      } else if (a.removedAt && shown.has(a.id)) {
+        shown.delete(a.id);
+        removed.push(a.id);
+      }
+    }
+    if (removed.length) onEvent({ type: "removed", ids: removed });
+  });
 }

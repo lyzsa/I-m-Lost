@@ -3,7 +3,7 @@
 // Errors and validation come from ./rules so the real app behaves exactly like the mock.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Category } from "../domain";
-import type { LivePhase, NewSignal, Session, Signal, Slide, Unsubscribe } from "../types";
+import type { Annotation, AnnotationEvent, LivePhase, NewAnnotation, NewSignal, Session, Signal, Slide, Unsubscribe } from "../types";
 import { ERRORS, cleanOtherText, normalizeCode, randomCode, validateSignal } from "./rules";
 
 const STUDENT_KEY = "lost-student-id";
@@ -244,3 +244,12 @@ export async function explainSignal(signalId: string): Promise<string> {
 export async function makeStudyGuide(sessionId: string): Promise<string> {
   return (await callAi<{ guide: string }>("/api/study-guide", { sessionId, studentId: getMyStudentId() })).guide;
 }
+
+// ---------- Instructor annotations (pen strokes) ----------
+// TEMPORARY until supabase/migrations/0003_annotations.sql is run and the real version lands:
+// reads show nothing and writes say what's missing, so pages don't crash in real mode.
+const ANNOTATIONS_NOT_READY = "Drawing on slides isn't set up on the live site yet";
+export async function addAnnotation(_a: NewAnnotation): Promise<Annotation> { throw new Error(ANNOTATIONS_NOT_READY); }
+export async function getAnnotations(_sessionId: string, _slideNumber: number): Promise<Annotation[]> { return []; }
+export async function removeAnnotations(_sessionId: string, _ids: string[]): Promise<void> { throw new Error(ANNOTATIONS_NOT_READY); }
+export function subscribeToAnnotations(_sessionId: string, _onEvent: (e: AnnotationEvent) => void): Unsubscribe { return () => {}; }

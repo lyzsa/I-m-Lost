@@ -1,6 +1,6 @@
 // Rules and error messages shared by the mock and the real backend, so both behave the same.
 import { categories } from "../domain";
-import type { NewSignal, Session } from "../types";
+import type { NewAnnotation, NewSignal, Session } from "../types";
 
 export const ERRORS = {
   noClass: "No class with that code",
@@ -45,4 +45,20 @@ export function validateSignal(s: NewSignal, session: Session): void {
 // What both backends store: the trimmed words, or nothing if they're blank. validateSignal runs first.
 export function cleanOtherText(text: string | undefined): string | undefined {
   return text?.trim() || undefined;
+}
+
+export const ANNOTATION_LIMITS = { maxPoints: 2000, maxWidth: 0.05, maxColorLength: 20 } as const;
+
+const isFraction = (v: unknown) => typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 1;
+
+// Throws a readable Error if an instructor stroke breaks a rule. Same checks in the mock and the real backend.
+export function validateAnnotation(a: NewAnnotation, session: Session): void {
+  if (a.slideNumber < 1 || a.slideNumber > session.slides.length) throw new Error("That slide doesn't exist");
+  if (!Array.isArray(a.points) || a.points.length < 1 || a.points.length > ANNOTATION_LIMITS.maxPoints)
+    throw new Error(`A stroke needs 1 to ${ANNOTATION_LIMITS.maxPoints} points`);
+  if (a.points.some(p => !isFraction(p?.x) || !isFraction(p?.y))) throw new Error("Stroke is outside the slide");
+  if (!(Number.isFinite(a.width) && a.width > 0 && a.width <= ANNOTATION_LIMITS.maxWidth))
+    throw new Error(`Line width must be more than 0 and at most ${ANNOTATION_LIMITS.maxWidth}`);
+  if (typeof a.color !== "string" || !a.color.trim() || a.color.length > ANNOTATION_LIMITS.maxColorLength)
+    throw new Error(`Colour must be 1 to ${ANNOTATION_LIMITS.maxColorLength} characters`);
 }
