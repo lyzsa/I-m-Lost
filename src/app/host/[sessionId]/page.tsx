@@ -42,6 +42,26 @@ export default function HostLivePage() {
   const pen = useInstructorPen(sessionId, session?.currentSlide ?? 1);
   const drawing = drawMode && !!session && session.phase !== "ended";
 
+  // While drawing, nothing on the page can be selected (no accidental text selection or iPad Copy / Look Up menu
+  // from a pencil or palm). Everything goes back to normal when drawing stops.
+  useEffect(() => {
+    if (!drawing) return;
+    const body = document.body.style;
+    const before = { user: body.userSelect, webkit: body.webkitUserSelect, callout: body.getPropertyValue("-webkit-touch-callout") };
+    body.userSelect = "none";
+    body.webkitUserSelect = "none";
+    body.setProperty("-webkit-touch-callout", "none");
+    window.getSelection()?.removeAllRanges();
+    const block = (e: Event) => e.preventDefault();
+    document.addEventListener("selectstart", block);
+    return () => {
+      document.removeEventListener("selectstart", block);
+      body.userSelect = before.user;
+      body.webkitUserSelect = before.webkit;
+      body.setProperty("-webkit-touch-callout", before.callout);
+    };
+  }, [drawing]);
+
   // Ctrl/Cmd+Z undoes the last stroke while drawing.
   const undoStroke = pen.undo;
   useEffect(() => {
