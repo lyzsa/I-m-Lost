@@ -172,7 +172,7 @@ export default function Page() {
       {painting && (
         <>
           {/* Same look as the instructor's draw toolbar (DrawToolbar), with student-sized buttons */}
-          <div className="space-y-1 rounded-xl bg-white p-1.5 text-sm shadow-sm">
+          <div className="select-none space-y-1 rounded-xl bg-white p-1.5 text-sm shadow-sm">
             <div className="flex items-center justify-between gap-2">
               <span className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 font-bold text-emerald-900"><PenIcon /> Highlighting</span>
               <div className="flex items-center">
@@ -188,10 +188,6 @@ export default function Page() {
                   className={`rounded-lg px-2.5 py-2 ${brush === size ? "bg-gray-900 text-white" : "hover:bg-gray-100"}`}>{name}</button>
               ))}
             </div>
-            <p className="px-2 pb-1 text-gray-600">
-              {boxes.length ? "Keep painting, or save it below." : "Paint over the part you don't understand."}
-              {pencilOnly ? " ✏️ Pencil paints; one finger scrolls." : !wide && " Pinch with 2 fingers to zoom in."}
-            </p>
           </div>
           {boxes.length > 0 && (
             <RegionPanel
