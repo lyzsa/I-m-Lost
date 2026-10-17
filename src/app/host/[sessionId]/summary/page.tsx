@@ -2,9 +2,10 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { getSession, getSlideSignals, type Session, type Signal } from "@/lib/api";
+import { getAnnotations, getSession, getSlideSignals, type Annotation, type Session, type Signal } from "@/lib/api";
 import { categories, type Category } from "@/lib/domain";
 import { SlideView } from "@/components/SlideView";
+import { AnnotationLayer } from "@/features/annotations/AnnotationLayer";
 import { ClusterOutlines } from "@/features/professor/DenseAreaLayer";
 import { findDenseAreas, type DenseArea } from "@/features/professor/denseAreas";
 import { HeatmapLayer } from "@/features/professor/HeatmapLayer";
@@ -12,7 +13,7 @@ import { HomeLogo } from "@/features/professor/HomeLogo";
 import { ReasonPie } from "@/features/professor/ReasonPie";
 import { otherAnswers, slideStats } from "@/features/professor/stats";
 
-type Loaded = { session: Session; bySlide: Signal[][] };
+type Loaded = { session: Session; bySlide: Signal[][]; strokesBySlide: Annotation[][] };
 const plural = (n: number, word: string) => `${word}${n === 1 ? "" : "s"}`;
 
 // Every typed "Other" response, in full, one card each.
@@ -42,7 +43,9 @@ function ReasonBars({ values }: { values: Record<Category, number> }) {
   );
 }
 
-function SlideSummary({ slide, signals, threshold }: { slide: Session["slides"][number]; signals: Signal[]; threshold: number }) {
+function SlideSummary({ slide, signals, strokes, threshold }: {
+  slide: Session["slides"][number]; signals: Signal[]; strokes: Annotation[]; threshold: number;
+}) {
   const s = slideStats(signals);
   const areas: DenseArea[] = useMemo(() => findDenseAreas(signals, threshold), [signals, threshold]);
   const inAnyArea = new Set(areas.flatMap(a => a.signalIds));
@@ -53,6 +56,7 @@ function SlideSummary({ slide, signals, threshold }: { slide: Session["slides"][
       <div>
         <SlideView imageUrl={slide.imageUrl} alt={`Slide ${slide.number} with students' marks`} className="rounded-lg">
           <HeatmapLayer signals={signals} />
+          <AnnotationLayer annotations={strokes} />
           <ClusterOutlines areas={areas} />
         </SlideView>
       </div>
@@ -115,8 +119,11 @@ export default function SummaryPage() {
     (async () => {
       const session = await getSession(sessionId);
       if (!session) return active && setData(null);
-      const bySlide = await Promise.all(session.slides.map(s => getSlideSignals(sessionId, s.number)));
-      if (active) setData({ session, bySlide });
+      const [bySlide, strokesBySlide] = await Promise.all([
+        Promise.all(session.slides.map(s => getSlideSignals(sessionId, s.number))),
+        Promise.all(session.slides.map(s => getAnnotations(sessionId, s.number))), // the instructor's pen strokes
+      ]);
+      if (active) setData({ session, bySlide, strokesBySlide });
     })().catch(e => active && setError(e instanceof Error ? e.message : "Couldn't load the summary."));
     return () => { active = false; };
   }, [sessionId]);
@@ -125,7 +132,7 @@ export default function SummaryPage() {
   if (data === undefined) return <main className="p-8 text-gray-600">Loading summary...</main>;
   if (data === null) return <main className="p-8"><HomeLogo /><h1 className="mt-6 text-3xl font-bold">Class not found</h1></main>;
 
-  const { session, bySlide } = data;
+  const { session, bySlide, strokesBySlide } = data;
   const total = slideStats(bySlide.flat());
   // The slider goes up to the most students who marked any one slide (at least 2), so every position means something.
   const maxThreshold = Math.max(2, ...bySlide.map(list => new Set(list.filter(sig => sig.kind === "region").map(sig => sig.studentId)).size));
@@ -154,7 +161,7 @@ export default function SummaryPage() {
       </section>
 
       <ol className="mt-4 space-y-4">
-        {session.slides.map((slide, i) => <SlideSummary key={slide.number} slide={slide} signals={bySlide[i]} threshold={threshold} />)}
+        {session.slides.map((slide, i) => <SlideSummary key={slide.number} slide={slide} signals={bySlide[i]} strokes={strokesBySlide[i]} threshold={threshold} />)}
       </ol>
     </main>
   );
