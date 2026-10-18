@@ -21,7 +21,7 @@ import { BRUSH_MAX, BRUSH_MIN, BRUSH_START, PaintLayer, paintedBoxes, type Strok
 import { RegionPanel } from "@/features/student/RegionPanel";
 import { SlideStrip } from "@/features/student/SlideStrip";
 import { rememberClass } from "@/features/student/lastClass";
-import { HomeLogo } from "@/features/instructor/HomeLogo"; // shared with the instructor screens so the logo matches
+import { CrestLogo } from "@/features/student/CrestLogo";
 
 // The same pen drawing the instructor's toolbar uses, so both screens look alike.
 function PenIcon() {
@@ -80,7 +80,7 @@ export default function Page() {
   if (session === null)
     return (
       <main className="mx-auto max-w-md p-8 text-center">
-        <HomeLogo />
+        <CrestLogo />
         <h1 className="mt-6 text-2xl font-bold">Class not found</h1>
         <Link href="/join" className="mt-6 inline-block rounded-xl bg-[#0c2b4c] px-6 py-3 text-white">Join another class</Link>
       </main>
@@ -230,7 +230,7 @@ export default function Page() {
   return (
     <main className="mx-auto max-w-3xl p-3 pb-8 text-[#0c2b4c] md:max-w-6xl md:p-6">
       <header className="mb-3 flex items-center gap-3">
-        <HomeLogo />
+        <CrestLogo />
         <h1 className="min-w-0 flex-1 truncate text-lg font-bold">{session.title}</h1>
         <span className="shrink-0 text-sm text-gray-600">Slide {shown} / {total}</span>
       </header>
