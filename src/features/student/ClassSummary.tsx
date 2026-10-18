@@ -29,14 +29,14 @@ export function ClassSummary({ explained, reviewHref, onClose }: Props) {
           {sorted.map(s => (
             <li key={s.id} className="rounded-xl bg-amber-50 p-3">
               <p className="text-sm font-bold">
-                <span className="mr-2 rounded bg-emerald-900 px-1.5 py-0.5 text-xs text-white">Slide {s.slideNumber}</span>
+                <span className="mr-2 rounded bg-[#0c2b4c] px-1.5 py-0.5 text-xs text-white">Slide {s.slideNumber}</span>
                 💡 {reason(s)}
               </p>
               <p className="mt-1 whitespace-pre-wrap text-sm">{s.explanation}</p>
             </li>
           ))}
         </ol>
-        <Link href={reviewHref} className="mt-3 block rounded-xl bg-emerald-900 p-3 text-center font-bold text-white">Open My Review →</Link>
+        <Link href={reviewHref} className="mt-3 block rounded-xl bg-[#0c2b4c] p-3 text-center font-bold text-white">Open My Review →</Link>
       </section>
     </div>
   );

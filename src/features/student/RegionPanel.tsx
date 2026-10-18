@@ -47,7 +47,7 @@ export function RegionPanel({ sessionId, slideNumber, rects, onSaved }: Props) {
       <h2 className="font-bold">Why is this confusing? <span className="font-normal text-gray-500">(optional)</span></h2>
       <div className="mt-2 grid grid-cols-2 gap-2">
         {categories.map(c => (
-          <label key={c} className={`flex items-center gap-2 rounded-lg border-2 p-2 text-sm ${picked.includes(c) ? "border-emerald-700 bg-emerald-50" : "border-gray-200"}`}>
+          <label key={c} className={`flex items-center gap-2 rounded-lg border-2 p-2 text-sm ${picked.includes(c) ? "border-[#24507f] bg-[#eef3f9]" : "border-gray-200"}`}>
             <input
               type="checkbox"
               className="h-4 w-4 shrink-0"
@@ -66,15 +66,15 @@ export function RegionPanel({ sessionId, slideNumber, rects, onSaved }: Props) {
           placeholder="What's confusing?"
           aria-label="What's confusing? (your own words)"
           autoFocus
-          className="mt-2 w-full rounded-lg border-2 border-emerald-700 p-2 text-sm focus:outline-none"
+          className="mt-2 w-full rounded-lg border-2 border-[#24507f] p-2 text-sm focus:outline-none"
         />
       )}
       {error && <p role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-red-700">Couldn&apos;t save: {error}. Try again.</p>}
       <div className="mt-3 grid grid-cols-2 gap-3">
-        <button onClick={() => save(false)} disabled={!!saving || !ready} className="rounded-xl bg-emerald-900 p-3 font-bold text-white">
+        <button onClick={() => save(false)} disabled={!!saving || !ready} className="rounded-xl bg-[#0c2b4c] p-3 font-bold text-white">
           {saving === "save" ? "Saving..." : "Save for Later"}
         </button>
-        <button onClick={() => save(true)} disabled={!!saving || !ready} className="rounded-xl border-2 border-emerald-900 p-3 font-bold text-emerald-900">
+        <button onClick={() => save(true)} disabled={!!saving || !ready} className="rounded-xl border-2 border-[#0c2b4c] p-3 font-bold text-[#0c2b4c]">
           {saving === "explain" ? "Saving..." : "Explain Now"}
         </button>
       </div>

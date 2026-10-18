@@ -9,15 +9,15 @@ type Props = { explain: Explain; onExplain: () => void; onClose: () => void };
 
 export function ExplainPanel({ explain, onExplain, onClose }: Props) {
   return (
-    <section aria-live="polite" className="rounded-xl border-2 border-emerald-900 bg-white p-4">
+    <section aria-live="polite" className="rounded-xl border-2 border-[#0c2b4c] bg-white p-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-bold">Explanation · Slide {explain.slideNumber}</h2>
-        <button onClick={onClose} className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-900 hover:bg-emerald-100">Close</button>
+        <button onClick={onClose} className="rounded-lg border border-[#c9d6e6] bg-[#eef3f9] px-4 py-2 text-sm font-bold text-[#0c2b4c] hover:bg-[#dbe5f1]">Close</button>
       </div>
       {explain.status === "ask" && (
         <>
           <p className="mt-2 text-gray-600">No explanation for this part yet.</p>
-          <button onClick={onExplain} className="mt-3 w-full rounded-xl bg-emerald-900 p-3 font-bold text-white">Explain this</button>
+          <button onClick={onExplain} className="mt-3 w-full rounded-xl bg-[#0c2b4c] p-3 font-bold text-white">Explain this</button>
         </>
       )}
       {explain.status === "thinking" && <p className="mt-2 text-gray-600">Thinking...</p>}
@@ -26,7 +26,7 @@ export function ExplainPanel({ explain, onExplain, onClose }: Props) {
         <>
           <p className="mt-2 text-red-700">Saved. Couldn&apos;t get an explanation.</p>
           {explain.text && <p className="mt-1 text-sm text-gray-600">{explain.text}</p>}
-          <button onClick={onExplain} className="mt-3 w-full rounded-xl bg-emerald-900 p-3 font-bold text-white">Try again</button>
+          <button onClick={onExplain} className="mt-3 w-full rounded-xl bg-[#0c2b4c] p-3 font-bold text-white">Try again</button>
         </>
       )}
     </section>
