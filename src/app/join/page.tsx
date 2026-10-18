@@ -16,7 +16,7 @@ export default function Page() {
           <img src="/landing/crest.webp" alt="I'm Lost crest" draggable={false} className="h-32 w-auto select-none" />
         </Link>
         <h1 className="mt-4 text-center text-3xl font-bold">Join your class</h1>
-        <p className="mb-6 mt-1 text-center text-gray-600">Type the code on the professor&apos;s screen.</p>
+        <p className="mb-6 mt-1 text-center text-gray-600">Type the code on the instructor&apos;s screen.</p>
         <Suspense fallback={<p className="rounded-2xl bg-white p-5 text-gray-500">Loading...</p>}>
           <JoinForm />
         </Suspense>

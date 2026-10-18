@@ -97,7 +97,7 @@ export function ZoomStage({ imageUrl, children, className = "h-[calc(100vh-15rem
   const pannable = !!size && !!aspect && (fitWidth * zoom + PAD > size.width + 1 || (fitWidth * zoom) / aspect + PAD > size.height + 1);
 
   // Drag to move around (mouse only; fingers already scroll natively). A press only becomes a drag after it moves
-  // a few pixels, so a plain click still reaches the slide (e.g. the professor pinning a spot). Anything inside that
+  // a few pixels, so a plain click still reaches the slide (e.g. the instructor pinning a spot). Anything inside that
   // handles the press itself and calls preventDefault (like a paint layer) is left alone.
   const drag = useRef<{ x: number; y: number; left: number; top: number; moved: boolean } | null>(null);
   const justDragged = useRef(false);

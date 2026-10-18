@@ -5,22 +5,22 @@ import { useParams } from "next/navigation";
 import { getSession, subscribeToSession, type Session } from "@/lib/api";
 import { SlideView, toSlideFraction } from "@/components/SlideView";
 import { AnnotationLayer } from "@/features/annotations/AnnotationLayer";
-import { DenseAreaLayer, areaAt, areaKey } from "@/features/professor/DenseAreaLayer";
-import { DrawLayer } from "@/features/professor/DrawLayer";
-import { DrawToolbar, PEN_COLORS, PEN_WIDTHS } from "@/features/professor/DrawToolbar";
-import { EyeIcon } from "@/features/professor/EyeIcon";
-import { findDenseAreas } from "@/features/professor/denseAreas";
-import { HeatmapLayer } from "@/features/professor/HeatmapLayer";
-import { HomeLogo } from "@/features/professor/HomeLogo";
-import { JoinCard } from "@/features/professor/JoinCard";
-import { LiveControls } from "@/features/professor/LiveControls";
-import { OtherResponsesModal, type ResponsesView } from "@/features/professor/OtherResponses";
-import { rememberClass } from "@/features/professor/myClasses";
-import { SlideNav } from "@/features/professor/SlideNav";
-import { StatsPanel } from "@/features/professor/StatsPanel";
-import { useInstructorPen } from "@/features/professor/useInstructorPen";
-import { useSlideSignals } from "@/features/professor/useSlideSignals";
-import { ZoomStage } from "@/features/professor/ZoomStage";
+import { DenseAreaLayer, areaAt, areaKey } from "@/features/instructor/DenseAreaLayer";
+import { DrawLayer } from "@/features/instructor/DrawLayer";
+import { DrawToolbar, PEN_COLORS, PEN_WIDTHS } from "@/features/instructor/DrawToolbar";
+import { EyeIcon } from "@/features/instructor/EyeIcon";
+import { findDenseAreas } from "@/features/instructor/denseAreas";
+import { HeatmapLayer } from "@/features/instructor/HeatmapLayer";
+import { HomeLogo } from "@/features/instructor/HomeLogo";
+import { JoinCard } from "@/features/instructor/JoinCard";
+import { LiveControls } from "@/features/instructor/LiveControls";
+import { OtherResponsesModal, type ResponsesView } from "@/features/instructor/OtherResponses";
+import { rememberClass } from "@/features/instructor/myClasses";
+import { SlideNav } from "@/features/instructor/SlideNav";
+import { StatsPanel } from "@/features/instructor/StatsPanel";
+import { useInstructorPen } from "@/features/instructor/useInstructorPen";
+import { useSlideSignals } from "@/features/instructor/useSlideSignals";
+import { ZoomStage } from "@/features/instructor/ZoomStage";
 
 export default function HostLivePage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -78,7 +78,7 @@ export default function HostLivePage() {
     getSession(sessionId).then(s => {
       if (!active) return;
       setSession(s);
-      if (s) rememberClass(s); // so this professor can resume it later from /host
+      if (s) rememberClass(s); // so this instructor can resume it later from /host
     }).catch(() => { if (active) setSession(null); });
     const unsubscribe = subscribeToSession(sessionId, s => { if (active) setSession(s); });
     return () => { active = false; unsubscribe(); };

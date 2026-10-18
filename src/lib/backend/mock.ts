@@ -77,7 +77,7 @@ async function toSmallDataUrl(blob: Blob): Promise<string> {
   return canvas.toDataURL("image/jpeg", 0.8);
 }
 
-// ---------- Professor ----------
+// ---------- Instructor ----------
 
 export async function createSession(title: string, slides: { image: Blob; text: string }[]): Promise<Session> {
   if (!slides.length) throw new Error("The PDF has no pages");

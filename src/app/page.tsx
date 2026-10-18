@@ -160,7 +160,7 @@ export default function Home() {
             <div className="lost-rise absolute inset-x-0 flex justify-center gap-[1.3cqw]" style={{ top: "74.4%", ...at(1.05) }}>
               <Link href="/host"
                 className="flex h-[6.5cqw] w-[22.8cqw] items-center justify-center rounded-[1.3cqw] bg-[#0c2b4c] text-[1.85cqw] font-medium text-white transition hover:bg-[#163d66] active:scale-[.98]">
-                I&apos;m a professor →
+                I&apos;m an instructor →
               </Link>
               <Link href="/join"
                 className="flex h-[6.5cqw] w-[22.4cqw] items-center justify-center rounded-[1.3cqw] border-[0.12cqw] border-[#0c2b4c] text-[1.85cqw] font-medium transition hover:bg-white active:scale-[.98]">
@@ -191,7 +191,7 @@ export default function Home() {
         <p className="lost-rise mt-5 max-w-xs text-base" style={at(0.9)}>A shared slide, a quiet signal, a clearer classroom.</p>
         <div className="lost-rise mt-7 flex w-full max-w-sm flex-col gap-3" style={at(1.05)}>
           <Link href="/host" className="rounded-2xl bg-[#0c2b4c] px-6 py-4 text-lg font-medium text-white transition active:scale-[.98]">
-            I&apos;m a professor →
+            I&apos;m an instructor →
           </Link>
           <Link href="/join" className="rounded-2xl border-2 border-[#0c2b4c] px-6 py-4 text-lg font-medium transition active:scale-[.98]">
             I&apos;m a student →

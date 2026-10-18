@@ -88,13 +88,13 @@ Migrations, run in order in the Supabase SQL Editor:
 
 ## Slides from a PDF
 
-[`src/features/professor/pdfToSlides.ts`](../src/features/professor/pdfToSlides.ts) converts the PDF in the instructor's browser: each page becomes a PNG (at most 2000 px wide) plus its extracted text, up to 20 pages. `createSession` uploads the images to Storage and creates the class.
+[`src/features/instructor/pdfToSlides.ts`](../src/features/instructor/pdfToSlides.ts) converts the PDF in the instructor's browser: each page becomes a PNG (at most 2000 px wide) plus its extracted text, up to 20 pages. `createSession` uploads the images to Storage and creates the class.
 
 It uses pdf.js's **legacy** build, with a small stream fix (`public/pdfjs/`), because the normal build relies on JavaScript features that Safari, iPhone and iPad don't support yet.
 
 ## Confusion spots
 
-[`src/features/professor/denseAreas.ts`](../src/features/professor/denseAreas.ts) lays an 80 × 60 grid over the slide and counts how many **different students** marked each cell. Cells marked by at least the threshold number of students (2 by default) are grouped with their touching neighbours into areas. Each area gets a bounding box, its student count, a reason breakdown (each student counted once per reason) and the "Other" responses inside it. The live screen and the end-of-class summary both use it.
+[`src/features/instructor/denseAreas.ts`](../src/features/instructor/denseAreas.ts) lays an 80 × 60 grid over the slide and counts how many **different students** marked each cell. Cells marked by at least the threshold number of students (2 by default) are grouped with their touching neighbours into areas. Each area gets a bounding box, its student count, a reason breakdown (each student counted once per reason) and the "Other" responses inside it. The live screen and the end-of-class summary both use it.
 
 ## AI pipeline
 
@@ -119,7 +119,7 @@ Demo-level, on purpose, for a 10-hour build: no logins, row-level security off, 
 
 | Path | Owner during the build | What's there |
 | --- | --- | --- |
-| `src/app/page.tsx`, `src/app/host/**`, `src/features/professor/**` | Person A | Start page, upload, instructor live screen, summary |
+| `src/app/page.tsx`, `src/app/host/**`, `src/features/instructor/**` | Person A | Start page, upload, instructor live screen, summary |
 | `src/app/join/**`, `src/app/class/**`, `src/features/student/**` | Person B | Join, student live screen, My Review |
 | `src/lib/**`, `src/app/api/**`, `supabase/**` | Person C | Contract, backends, AI routes, schema |
 | `src/components/SlideView.tsx`, `src/features/annotations/**` | Shared | Slide display and instructor ink, used by both sides |

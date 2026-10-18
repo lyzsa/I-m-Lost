@@ -36,7 +36,7 @@ export default function JoinForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!code.trim()) { setError("Type the code your professor shows"); return; }
+    if (!code.trim()) { setError("Type the code your instructor shows"); return; }
     setBusy(true);
     setError("");
     try {
