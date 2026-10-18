@@ -134,13 +134,6 @@ const CREST_ALT = "I'm Lost crest: a confused student at a laptop under a tree";
 export default function Home() {
   const scene = useScrollProgress();
   return (
-    <main className="mx-auto max-w-4xl p-8 pt-24">
-      <p className="text-sm font-bold tracking-widest text-emerald-700">LOST / CLASSROOM CLARITY</p>
-      <h1 className="my-6 text-6xl font-bold">Make confusion<br />visible.</h1>
-      <p className="mb-10 max-w-xl text-xl">A shared slide, a quiet signal, a clearer classroom.</p>
-      <div className="flex flex-wrap gap-4">
-        <Link className="rounded-xl bg-emerald-900 px-6 py-4 text-lg text-white" href="/host">I&apos;m the instructor →</Link>
-        <Link className="rounded-xl border-2 border-emerald-900 bg-white px-6 py-4 text-lg text-emerald-900" href="/join">I&apos;m a student →</Link>
     <main className="min-h-svh overflow-x-clip" style={{ background: PAPER, color: INK }}>
       <style>{MOTION_CSS}</style>
 
@@ -167,7 +160,7 @@ export default function Home() {
             <div className="lost-rise absolute inset-x-0 flex justify-center gap-[1.3cqw]" style={{ top: "74.4%", ...at(1.05) }}>
               <Link href="/host"
                 className="flex h-[6.5cqw] w-[22.8cqw] items-center justify-center rounded-[1.3cqw] bg-[#0c2b4c] text-[1.85cqw] font-medium text-white transition hover:bg-[#163d66] active:scale-[.98]">
-                I&apos;m a professor →
+                I&apos;m an instructor →
               </Link>
               <Link href="/join"
                 className="flex h-[6.5cqw] w-[22.4cqw] items-center justify-center rounded-[1.3cqw] border-[0.12cqw] border-[#0c2b4c] text-[1.85cqw] font-medium transition hover:bg-white active:scale-[.98]">
@@ -198,7 +191,7 @@ export default function Home() {
         <p className="lost-rise mt-5 max-w-xs text-base" style={at(0.9)}>A shared slide, a quiet signal, a clearer classroom.</p>
         <div className="lost-rise mt-7 flex w-full max-w-sm flex-col gap-3" style={at(1.05)}>
           <Link href="/host" className="rounded-2xl bg-[#0c2b4c] px-6 py-4 text-lg font-medium text-white transition active:scale-[.98]">
-            I&apos;m a professor →
+            I&apos;m an instructor →
           </Link>
           <Link href="/join" className="rounded-2xl border-2 border-[#0c2b4c] px-6 py-4 text-lg font-medium transition active:scale-[.98]">
             I&apos;m a student →
