@@ -55,9 +55,9 @@ export default function JoinForm() {
     <>
       {previous && (
         previous.ended ? (
-          <div className="mb-4 rounded-2xl bg-emerald-50 p-4">
+          <div className="mb-4 rounded-2xl bg-[#eef3f9] p-4">
             <p>Your last class, <b>{previous.last.title}</b>, has ended.</p>
-            <Link href={`/class/${previous.last.id}/review`} className="mt-2 inline-block font-bold text-emerald-900 underline">Open My Review →</Link>
+            <Link href={`/class/${previous.last.id}/review`} className="mt-2 inline-block font-bold text-[#0c2b4c] underline">Open My Review →</Link>
           </div>
         ) : (
           <div className="mb-4 rounded-2xl border-2 border-amber-300 bg-amber-50 p-4">
@@ -65,7 +65,7 @@ export default function JoinForm() {
             <p className="mt-1 text-gray-700">
               <b>{previous.last.title}</b> (code {previous.last.code}) is still running. Joining a new class takes you out of it.
             </p>
-            <Link href={`/class/${previous.last.id}`} className="mt-3 block rounded-xl bg-emerald-900 p-3 text-center font-bold text-white">
+            <Link href={`/class/${previous.last.id}`} className="mt-3 block rounded-xl bg-[#0c2b4c] p-3 text-center font-bold text-white">
               Go back to {previous.last.title}
             </Link>
           </div>
@@ -82,7 +82,7 @@ export default function JoinForm() {
             autoComplete="off"
             spellCheck={false}
             placeholder="K7Q2PX"
-            className="mt-2 w-full rounded-xl border-2 border-gray-200 p-4 text-center font-mono text-3xl tracking-[0.3em] uppercase focus:border-emerald-600 focus:outline-none"
+            className="mt-2 w-full rounded-xl border-2 border-gray-200 p-4 text-center font-mono text-3xl tracking-[0.3em] uppercase focus:border-[#3a6596] focus:outline-none"
           />
         </label>
         <label className="block">
@@ -93,11 +93,11 @@ export default function JoinForm() {
             maxLength={40}
             autoComplete="given-name"
             placeholder="Alex"
-            className="mt-2 w-full rounded-xl border-2 border-gray-200 p-4 text-lg focus:border-emerald-600 focus:outline-none"
+            className="mt-2 w-full rounded-xl border-2 border-gray-200 p-4 text-lg focus:border-[#3a6596] focus:outline-none"
           />
         </label>
         {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>}
-        <button type="submit" disabled={busy} className="w-full rounded-xl bg-emerald-900 p-4 text-lg font-bold text-white">
+        <button type="submit" disabled={busy} className="w-full rounded-xl bg-[#0c2b4c] p-4 text-lg font-bold text-white">
           {busy ? "Joining..." : "Join class"}
         </button>
       </form>

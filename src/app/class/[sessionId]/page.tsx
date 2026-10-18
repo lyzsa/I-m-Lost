@@ -21,7 +21,7 @@ import { BRUSH_MAX, BRUSH_MIN, BRUSH_START, PaintLayer, paintedBoxes, type Strok
 import { RegionPanel } from "@/features/student/RegionPanel";
 import { SlideStrip } from "@/features/student/SlideStrip";
 import { rememberClass } from "@/features/student/lastClass";
-import { HomeLogo } from "@/features/instructor/HomeLogo"; // shared with the instructor screens so the logo matches
+import { CrestLogo } from "@/features/student/CrestLogo";
 
 // The same pen drawing the instructor's toolbar uses, so both screens look alike.
 function PenIcon() {
@@ -80,9 +80,9 @@ export default function Page() {
   if (session === null)
     return (
       <main className="mx-auto max-w-md p-8 text-center">
-        <HomeLogo />
+        <CrestLogo />
         <h1 className="mt-6 text-2xl font-bold">Class not found</h1>
-        <Link href="/join" className="mt-6 inline-block rounded-xl bg-emerald-900 px-6 py-3 text-white">Join another class</Link>
+        <Link href="/join" className="mt-6 inline-block rounded-xl bg-[#0c2b4c] px-6 py-3 text-white">Join another class</Link>
       </main>
     );
 
@@ -177,11 +177,11 @@ export default function Page() {
           {/* Same look as the instructor's draw toolbar (DrawToolbar), with student-sized buttons.
               Phones: the reasons only come after "Done highlighting", so they don't cover the slide while painting. */}
           {picking ? (
-            <button onClick={() => setPicking(false)} className="text-sm font-bold text-emerald-900">‹ Keep highlighting</button>
+            <button onClick={() => setPicking(false)} className="text-sm font-bold text-[#0c2b4c]">‹ Keep highlighting</button>
           ) : (
             <div className="select-none space-y-1 rounded-xl bg-white p-1.5 text-sm shadow-sm">
               <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 font-bold text-emerald-900"><PenIcon /> Highlighting</span>
+                <span className="flex items-center gap-2 rounded-lg border border-[#c9d6e6] bg-[#eef3f9] px-3 py-2 font-bold text-[#0c2b4c]"><PenIcon /> Highlighting</span>
                 <div className="flex items-center">
                   <button onClick={undoStroke} disabled={!strokes.length} className="rounded-lg px-2.5 py-2 hover:bg-gray-100 disabled:text-gray-400">Undo</button>
                   <span className="mx-1 h-6 w-px bg-gray-200" />
@@ -200,7 +200,7 @@ export default function Page() {
             </div>
           )}
           {!wide && !picking && boxes.length > 0 && (
-            <button onClick={() => setPicking(true)} className="w-full rounded-xl bg-emerald-900 p-3 font-bold text-white">
+            <button onClick={() => setPicking(true)} className="w-full rounded-xl bg-[#0c2b4c] p-3 font-bold text-white">
               Done highlighting →
             </button>
           )}
@@ -228,9 +228,9 @@ export default function Page() {
   const idle = !ended && !painting && !explain;
 
   return (
-    <main className="mx-auto max-w-3xl p-3 pb-8 md:max-w-6xl md:p-6">
+    <main className="mx-auto max-w-3xl p-3 pb-8 text-[#0c2b4c] md:max-w-6xl md:p-6">
       <header className="mb-3 flex items-center gap-3">
-        <HomeLogo />
+        <CrestLogo />
         <h1 className="min-w-0 flex-1 truncate text-lg font-bold">{session.title}</h1>
         <span className="shrink-0 text-sm text-gray-600">Slide {shown} / {total}</span>
       </header>
@@ -238,9 +238,9 @@ export default function Page() {
       <div className="md:grid md:grid-cols-[minmax(0,1fr)_320px] md:items-start md:gap-6">
         <section>
           {ended ? (
-            <div className="mb-3 rounded-xl bg-emerald-900 p-4 text-white">
+            <div className="mb-3 rounded-xl bg-[#0c2b4c] p-4 text-white">
               <p className="font-bold">Class ended</p>
-              <Link href={`/class/${session.id}/review`} className="mt-3 block rounded-lg bg-white p-3 text-center font-bold text-emerald-900">
+              <Link href={`/class/${session.id}/review`} className="mt-3 block rounded-lg bg-white p-3 text-center font-bold text-[#0c2b4c]">
                 Open My Review →
               </Link>
               {explainedAll.length > 0 && (
@@ -254,7 +254,7 @@ export default function Page() {
           ) : !following ? (
             <button onClick={() => setFollowing(true)} className="mb-3 flex w-full items-center justify-between rounded-xl bg-amber-100 p-3 text-left">
               <span>Class is on slide {live}.</span>
-              <b className="rounded-lg bg-emerald-900 px-3 py-1 text-white">Back to Live</b>
+              <b className="rounded-lg bg-[#0c2b4c] px-3 py-1 text-white">Back to Live</b>
             </button>
           ) : session.phase === "reviewing" ? (
             <p className="mb-3 rounded-xl bg-sky-100 p-3 text-sm">Instructor is reviewing feedback</p>
@@ -317,7 +317,7 @@ export default function Page() {
                 <>
                   {lostButton("w-full rounded-xl p-3 text-xl")}
                   {message}
-                  {pointButton("w-full rounded-xl border-2 border-emerald-900 bg-white p-3 font-bold text-emerald-900", "✍️ Highlight the exact part")}
+                  {pointButton("w-full rounded-xl border-2 border-[#0c2b4c] bg-white p-3 font-bold text-[#0c2b4c]", "✍️ Highlight the exact part")}
                 </>
               )}
             </div>
@@ -333,7 +333,7 @@ export default function Page() {
                 {lostButton("w-full rounded-xl p-4 text-xl")}
                 {message}
                 {lostOnThisSlide && <p className="text-center text-sm text-gray-600">Want to be more specific?</p>}
-                {pointButton("w-full rounded-xl border-2 border-emerald-900 bg-white p-4 text-lg font-bold text-emerald-900", "✍️ Highlight the exact part")}
+                {pointButton("w-full rounded-xl border-2 border-[#0c2b4c] bg-white p-4 text-lg font-bold text-[#0c2b4c]", "✍️ Highlight the exact part")}
                 {switchClass}
               </div>
             )}
@@ -347,7 +347,7 @@ export default function Page() {
         <FloatingActions toast={msg}>
           {lostButton("grid h-20 w-20 place-items-center rounded-full p-2 text-base leading-tight shadow-lg")}
           {pointButton(
-            "grid h-16 w-16 place-items-center rounded-full border-2 border-emerald-900 bg-white text-sm font-bold leading-tight text-emerald-900 shadow-lg",
+            "grid h-16 w-16 place-items-center rounded-full border-2 border-[#0c2b4c] bg-white text-sm font-bold leading-tight text-[#0c2b4c] shadow-lg",
             <span><span className="text-xl">✍️</span><br /><span className="text-xs">Highlight</span></span>,
           )}
         </FloatingActions>
@@ -360,7 +360,7 @@ export default function Page() {
 
       {/* Phones: a bottom sheet, only while it's needed (picking reasons, or reading an explanation). */}
       {!wide && (painting || explain) && (
-        <div className="sticky bottom-0 z-10 -mx-3 mt-4 space-y-3 border-t border-gray-200 bg-[#f3f5f2]/95 px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur">
+        <div className="sticky bottom-0 z-10 -mx-3 mt-4 space-y-3 border-t border-[#e8e5df] bg-[#faf9f7]/95 px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur">
           {sheet}
         </div>
       )}

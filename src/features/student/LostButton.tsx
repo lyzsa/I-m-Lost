@@ -42,7 +42,7 @@ export function LostButton({ sessionId, slideNumber, done, onSaved, onStatus, cl
       onClick={() => send(failedId ?? crypto.randomUUID())}
       disabled={state === "saving"}
       title="The whole slide lost me"
-      className={`bg-emerald-900 font-bold text-white ${className}`}
+      className={`bg-[#0c2b4c] font-bold text-white ${className}`}
     >
       {state === "saving" ? "Saving..." : state === "error" ? "Try again" : state === "saved" || done ? "I'm Lost ✓" : "I'm Lost"}
     </button>

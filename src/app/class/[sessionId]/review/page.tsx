@@ -9,7 +9,7 @@ import { explainSignal, getMySignals, getSession, makeStudyGuide, type Session, 
 import { RectBox, SlideView } from "@/components/SlideView";
 import { ExplainRail } from "@/features/student/ExplainRail";
 import { InstructorInk } from "@/features/student/InstructorInk";
-import { HomeLogo } from "@/features/instructor/HomeLogo"; // shared with the instructor screens so the logo matches
+import { CrestLogo } from "@/features/student/CrestLogo";
 
 type Guide = { status: "idle" | "writing" | "done" | "error"; text: string }; // text = the guide, or why the AI failed
 
@@ -30,9 +30,9 @@ export default function Page() {
   if (session === null)
     return (
       <main className="mx-auto max-w-md p-8 text-center">
-        <HomeLogo />
+        <CrestLogo />
         <h1 className="mt-6 text-2xl font-bold">Class not found</h1>
-        <Link href="/join" className="mt-6 inline-block rounded-xl bg-emerald-900 px-6 py-3 text-white">Join another class</Link>
+        <Link href="/join" className="mt-6 inline-block rounded-xl bg-[#0c2b4c] px-6 py-3 text-white">Join another class</Link>
       </main>
     );
 
@@ -72,10 +72,10 @@ export default function Page() {
   }
 
   return (
-    <main className="mx-auto max-w-2xl space-y-4 p-3 pb-10 md:p-6">
+    <main className="mx-auto max-w-2xl space-y-4 p-3 pb-10 text-[#0c2b4c] md:p-6">
       <header>
         <div className="flex items-center justify-between gap-3">
-          <HomeLogo />
+          <CrestLogo />
           <Link href={`/class/${session.id}`} className="text-sm text-gray-600">← Back to class</Link>
         </div>
         <h1 className="mt-4 text-2xl font-bold">My Review</h1>
@@ -89,10 +89,10 @@ export default function Page() {
           <h2 className="font-bold">Study guide</h2>
           <p className="text-sm text-gray-600">Built only from the {mine.length} thing{mine.length === 1 ? "" : "s"} you marked.</p>
           {guide.status === "done" ? (
-            <p className="mt-3 whitespace-pre-wrap rounded-lg bg-emerald-50 p-3">{guide.text}</p>
+            <p className="mt-3 whitespace-pre-wrap rounded-lg bg-[#eef3f9] p-3">{guide.text}</p>
           ) : (
             <>
-              <button onClick={writeGuide} disabled={guide.status === "writing"} className="mt-3 w-full rounded-xl bg-emerald-900 p-4 text-lg font-bold text-white">
+              <button onClick={writeGuide} disabled={guide.status === "writing"} className="mt-3 w-full rounded-xl bg-[#0c2b4c] p-4 text-lg font-bold text-white">
                 {guide.status === "writing" ? "Writing your study guide..." : guide.status === "error" ? "Try again" : "Make my study guide"}
               </button>
               {guide.status === "error" && (
@@ -109,7 +109,7 @@ export default function Page() {
       {explained.length > 0 && (
         <button
           onClick={() => setUnfolded(allUnfolded ? new Set() : new Set(explained.map(s => s.id)))}
-          className="w-full rounded-xl border-2 border-emerald-900 bg-white p-3 font-bold text-emerald-900"
+          className="w-full rounded-xl border-2 border-[#0c2b4c] bg-white p-3 font-bold text-[#0c2b4c]"
         >
           {allUnfolded ? "Fold all AI explanations" : `💡 Show all AI explanations (${explained.length})`}
         </button>
@@ -142,7 +142,7 @@ export default function Page() {
                   </p>
                   {s.explanation ? (
                     <>
-                      <button onClick={() => toggle(s.id)} aria-expanded={unfolded.has(s.id)} className="mt-2 text-sm font-bold text-emerald-900">
+                      <button onClick={() => toggle(s.id)} aria-expanded={unfolded.has(s.id)} className="mt-2 text-sm font-bold text-[#0c2b4c]">
                         💡 {unfolded.has(s.id) ? "Hide AI explanation ▾" : "AI explanation ▸"}
                       </button>
                       {unfolded.has(s.id) && <p className="mt-2 whitespace-pre-wrap text-sm">{s.explanation}</p>}
@@ -151,7 +151,7 @@ export default function Page() {
                     <button
                       onClick={() => explain(s.id)}
                       disabled={explaining[s.id] === "thinking"}
-                      className="mt-2 rounded-lg border-2 border-emerald-900 px-3 py-1 text-sm font-bold text-emerald-900"
+                      className="mt-2 rounded-lg border-2 border-[#0c2b4c] px-3 py-1 text-sm font-bold text-[#0c2b4c]"
                     >
                       {explaining[s.id] === "thinking" ? "Thinking..." : "Explain this"}
                     </button>
