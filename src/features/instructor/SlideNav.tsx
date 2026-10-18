@@ -25,7 +25,7 @@ export function SlideNav({ session, onChange }: { session: Session; onChange: (s
   }
 
   return (
-    <nav aria-label="Slides" className="mt-3 rounded-2xl bg-white p-2">
+    <nav aria-label="Slides" className="mt-3 rounded-2xl bg-white p-2 shadow-sm">
       <div className="flex items-center gap-2">
         <button className="shrink-0 rounded-lg bg-gray-100 px-3 py-2" disabled={busy || session.currentSlide <= 1}
           onClick={() => goTo(session.currentSlide - 1)}>‹ Prev</button>
@@ -35,12 +35,12 @@ export function SlideNav({ session, onChange }: { session: Session; onChange: (s
             return (
               <li key={s.number} className="shrink-0">
                 <button
-                  className={`relative block h-14 w-24 overflow-hidden rounded-md border-2 bg-gray-100 ${current ? "border-emerald-700" : "border-transparent hover:border-gray-300"}`}
+                  className={`relative block h-14 w-24 overflow-hidden rounded-md border-2 bg-gray-100 ${current ? "border-[#24507f]" : "border-transparent hover:border-gray-300"}`}
                   disabled={busy} aria-current={current ? "page" : undefined} aria-label={`Go to slide ${s.number}`}
                   onClick={() => goTo(s.number)}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={s.imageUrl} alt="" className="block h-full w-full object-contain" draggable={false} />
-                  <span className={`absolute bottom-0.5 left-0.5 rounded px-1 text-xs font-bold ${current ? "bg-emerald-700 text-white" : "bg-white/90"}`}>{s.number}</span>
+                  <span className={`absolute bottom-0.5 left-0.5 rounded px-1 text-xs font-bold ${current ? "bg-[#24507f] text-white" : "bg-white/90"}`}>{s.number}</span>
                 </button>
               </li>
             );

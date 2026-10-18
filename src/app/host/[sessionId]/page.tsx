@@ -90,7 +90,7 @@ export default function HostLivePage() {
       <main className="mx-auto max-w-xl p-8 pt-16">
         <HomeLogo />
         <h1 className="mt-6 text-3xl font-bold">Class not found</h1>
-        <Link href="/host" className="mt-6 inline-block rounded-xl bg-emerald-900 px-6 py-3 text-white">Start a new class</Link>
+        <Link href="/host" className="mt-6 inline-block rounded-xl bg-[#0c2b4c] px-6 py-3 font-bold text-white">Start a new class</Link>
       </main>
     );
 
@@ -104,9 +104,10 @@ export default function HostLivePage() {
   return (
     <main className="mx-auto max-w-7xl p-4 md:p-6">
       <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex min-w-0 items-center gap-3">
           <HomeLogo />
-          <h1 className="text-2xl font-bold">{session.title}</h1>
+          <span aria-hidden className="h-7 w-px shrink-0 bg-[#0c2b4c]/20" />
+          <h1 className="min-w-0 truncate text-xl font-bold text-[#24507f]">{session.title}</h1>
         </div>
         <span className="text-sm text-gray-600">Instructor&apos;s view</span>
       </header>
@@ -154,7 +155,7 @@ export default function HostLivePage() {
             </div>
           )}
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <button className="flex items-center gap-2 rounded-xl bg-white px-4 py-2" onClick={() => setHeatChoice({ key: heatKey, show: !showHeat })}>
+            <button className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 shadow-sm" onClick={() => setHeatChoice({ key: heatKey, show: !showHeat })}>
               <EyeIcon off={showHeat} />
               {showHeat ? "Hide heatmap (clean view)" : "Show heatmap"}
             </button>
@@ -164,7 +165,7 @@ export default function HostLivePage() {
               </span>
             )}
             {showHeat && boxCount > 0 && (
-              <span className="flex items-center gap-2 rounded-xl bg-white px-3 py-1.5 text-sm">
+              <span className="flex items-center gap-2 rounded-xl bg-white px-3 py-1.5 text-sm shadow-sm">
                 Dense areas: at least
                 <button aria-label="Lower threshold" className="h-7 w-7 rounded-lg bg-gray-100" disabled={threshold <= 1} onClick={() => setThreshold(t => t - 1)}>−</button>
                 <b className="w-4 text-center">{threshold}</b>

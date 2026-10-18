@@ -35,7 +35,7 @@ function SlideSummary({ slide, signals, strokes, threshold }: {
   const elsewhere = otherAnswers(signals.filter(sig => !inAnyArea.has(sig.id)));
 
   return (
-    <li className="grid gap-5 rounded-2xl bg-white p-4 md:grid-cols-[minmax(0,380px)_1fr]">
+    <li className="grid gap-5 rounded-2xl bg-white p-4 shadow-sm md:grid-cols-[minmax(0,380px)_1fr]">
       <div>
         <SlideView imageUrl={slide.imageUrl} alt={`Slide ${slide.number} with students' marks`} className="rounded-lg">
           <HeatmapLayer signals={signals} />
@@ -65,7 +65,7 @@ function SlideSummary({ slide, signals, strokes, threshold }: {
             {areas.map((a, i) => (
               <section key={i} className="mt-4 rounded-xl bg-gray-50 p-3">
                 <h3 className="flex items-center gap-2 text-sm font-bold">
-                  <span className="grid h-5 w-5 place-items-center rounded-full bg-emerald-800 text-xs text-white" aria-label={`Area ${i + 1} on the slide`}>{i + 1}</span>
+                  <span className="grid h-5 w-5 place-items-center rounded-full bg-[#0c2b4c] text-xs text-white" aria-label={`Area ${i + 1} on the slide`}>{i + 1}</span>
                   {a.students} {plural(a.students, "student")} contributed
                 </h3>
                 <div className="mt-2"><ReasonPie values={a.reasons} /></div>
@@ -124,9 +124,9 @@ export default function SummaryPage() {
     <main className="mx-auto max-w-6xl p-4 md:p-6">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <HomeLogo />
-        <Link href="/" className="rounded-xl border-2 border-emerald-900 px-4 py-2 text-emerald-900">Back to home</Link>
+        <Link href="/" className="rounded-xl border-2 border-[#0c2b4c] px-4 py-2 text-[#0c2b4c]">Back to home</Link>
       </header>
-      <p className="text-sm font-bold tracking-widest text-emerald-700">CLASS SUMMARY</p>
+      <p className="text-sm font-bold tracking-widest text-[#3a6596]">CLASS SUMMARY</p>
       <h1 className="mt-1 text-3xl font-bold">{session.title}</h1>
       <p className="mt-2 text-gray-600">
         <b>{total.students}</b> {total.students === 1 ? "student has" : "students have"} made annotations in this session.
@@ -136,7 +136,7 @@ export default function SummaryPage() {
           {threshold === 1 ? "Showing every spot students marked" : `Showing confusion spots marked by ${threshold}+ students`}
         </label>
         <input id="spot-threshold" type="range" min={1} max={maxThreshold} step={1} value={Math.min(threshold, maxThreshold)}
-          onChange={e => setThreshold(Number(e.target.value))} className="mt-2 w-full accent-emerald-800" />
+          onChange={e => setThreshold(Number(e.target.value))} className="mt-2 w-full accent-[#0c2b4c]" />
         <div className="flex justify-between text-xs text-gray-500">
           <span>Fewer students&apos; annotations</span>
           <span>More students&apos; annotations</span>

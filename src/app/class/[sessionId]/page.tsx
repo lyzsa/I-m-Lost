@@ -231,7 +231,8 @@ export default function Page() {
     <main className="mx-auto max-w-3xl p-3 pb-8 text-[#0c2b4c] md:max-w-6xl md:p-6">
       <header className="mb-3 flex items-center gap-3">
         <CrestLogo />
-        <h1 className="min-w-0 flex-1 truncate text-lg font-bold">{session.title}</h1>
+        <span aria-hidden className="h-6 w-px shrink-0 bg-[#0c2b4c]/20" />
+        <h1 className="min-w-0 flex-1 truncate text-lg font-bold text-[#24507f]">{session.title}</h1>
         <span className="shrink-0 text-sm text-gray-600">Slide {shown} / {total}</span>
       </header>
 
@@ -257,7 +258,7 @@ export default function Page() {
               <b className="rounded-lg bg-[#0c2b4c] px-3 py-1 text-white">Back to Live</b>
             </button>
           ) : session.phase === "reviewing" ? (
-            <p className="mb-3 rounded-xl bg-sky-100 p-3 text-sm">Instructor is reviewing feedback</p>
+            <p className="mb-3 rounded-xl bg-[#eef3f9] p-3 text-sm">Instructor is reviewing feedback</p>
           ) : null}
 
           <div className="flex gap-1.5">

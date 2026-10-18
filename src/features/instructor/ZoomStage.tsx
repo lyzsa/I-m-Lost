@@ -135,7 +135,7 @@ export function ZoomStage({ imageUrl, children, className = "h-[calc(100vh-15rem
     <div className="relative">
       <div
         ref={area}
-        className={`overflow-auto rounded-2xl bg-gray-200/70 ${className} ${
+        className={`overflow-auto rounded-2xl bg-[#e9eef4] ${className} ${
           dragging ? "select-none cursor-grabbing [&_*]:cursor-grabbing!" : pannable ? "cursor-grab [&_*]:cursor-grab!" : ""}`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
