@@ -257,7 +257,7 @@ export default function Page() {
               <b className="rounded-lg bg-[#0c2b4c] px-3 py-1 text-white">Back to Live</b>
             </button>
           ) : session.phase === "reviewing" ? (
-            <p className="mb-3 rounded-xl bg-sky-100 p-3 text-sm">Instructor is reviewing feedback</p>
+            <p className="mb-3 rounded-xl bg-[#eef3f9] p-3 text-sm">Instructor is reviewing feedback</p>
           ) : null}
 
           <div className="flex gap-1.5">

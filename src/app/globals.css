@@ -1,2 +1,2 @@
 @import "tailwindcss";
-body{background:#f3f5f2;color:#17251e;font-family:Arial,sans-serif} button,a,input,select{touch-action:manipulation}button{cursor:pointer}button:disabled{cursor:default;opacity:.5}button:focus-visible,a:focus-visible{outline:3px solid #059669;outline-offset:3px}
+body{background:#faf9f7;color:#0c2b4c;font-family:Arial,sans-serif} button,a,input,select{touch-action:manipulation}button{cursor:pointer}button:disabled{cursor:default;opacity:.5}button:focus-visible,a:focus-visible{outline:3px solid #3a6596;outline-offset:3px}

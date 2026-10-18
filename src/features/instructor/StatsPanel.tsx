@@ -24,7 +24,7 @@ export function StatsPanel({ signals, onOpenOther }: { signals: Signal[]; onOpen
   const all = slideStats(signals);
 
   return (
-    <section className="rounded-2xl bg-white p-5">
+    <section className="rounded-2xl bg-white p-5 shadow-sm">
       <h2 className="font-bold">Feedback on this slide</h2>
       <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-xl bg-gray-50 p-2"><dt className="text-xs text-gray-600">I&apos;m Lost</dt><dd className="text-2xl font-bold">{all.lost}</dd></div>

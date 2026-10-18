@@ -45,15 +45,15 @@ export function DenseAreaLayer({ areas, hovered, pinned, onUnpin, onOpenResponse
         return (
           <div key={key}>
             <RectBox rect={a.bounds}
-              className={`rounded-md border-2 border-dashed ${open ? "border-emerald-900 bg-emerald-900/5" : "border-emerald-800"}`} />
-            <span className="pointer-events-none absolute grid h-5 w-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-emerald-800 text-xs font-bold text-white"
+              className={`rounded-md border-2 border-dashed ${open ? "border-[#0c2b4c] bg-[#0c2b4c]/5" : "border-[#0c2b4c]"}`} />
+            <span className="pointer-events-none absolute grid h-5 w-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-[#0c2b4c] text-xs font-bold text-white"
               style={{ left: `${a.bounds.x * 100}%`, top: `${a.bounds.y * 100}%` }}>{i + 1}</span>
             {open && (
               <div className={`absolute w-56 rounded-xl border bg-white p-2.5 text-xs shadow-lg ${isPinned ? "pointer-events-auto" : "pointer-events-none"}`}
                 style={{ ...cardPosition(a), zIndex: isPinned ? 20 : 30 /* the one you're pointing at is on top */ }}
                 onClick={e => e.stopPropagation()}>
                 <div className="flex items-center gap-2 font-bold">
-                  <span className="grid h-5 w-5 place-items-center rounded-full bg-emerald-800 text-white">{i + 1}</span>
+                  <span className="grid h-5 w-5 place-items-center rounded-full bg-[#0c2b4c] text-white">{i + 1}</span>
                   <span className="flex-1">{a.students} {a.students === 1 ? "student" : "students"} marked here</span>
                   {isPinned && (
                     <button aria-label={`Close spot ${i + 1}`} className="grid h-5 w-5 place-items-center rounded text-gray-500 hover:bg-gray-100"
@@ -89,8 +89,8 @@ export function ClusterOutlines({ areas }: { areas: DenseArea[] }) {
     <>
       {areas.map((a, i) => (
         <div key={i}>
-          <RectBox rect={a.bounds} className="rounded-md border-2 border-dashed border-emerald-800" />
-          <span className="pointer-events-none absolute grid h-5 w-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-emerald-800 text-xs font-bold text-white"
+          <RectBox rect={a.bounds} className="rounded-md border-2 border-dashed border-[#0c2b4c]" />
+          <span className="pointer-events-none absolute grid h-5 w-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-[#0c2b4c] text-xs font-bold text-white"
             style={{ left: `${a.bounds.x * 100}%`, top: `${a.bounds.y * 100}%` }}>{i + 1}</span>
         </div>
       ))}

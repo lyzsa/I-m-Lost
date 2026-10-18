@@ -31,7 +31,7 @@ type Props = {
 export function DrawToolbar({ drawing, onToggle, color, onColor, width, onWidth, canUndo, onUndo, hasStrokes, onClear }: Props) {
   const [confirmClear, setConfirmClear] = useState(false);
   return (
-    <div className="flex select-none flex-wrap items-center gap-2 rounded-xl bg-white p-1.5 text-sm"
+    <div className="flex select-none flex-wrap items-center gap-2 rounded-xl bg-white p-1.5 text-sm shadow-sm"
       style={{ WebkitTouchCallout: "none" /* iPad: no Copy / Look Up menu on long press */ }}>
       <button aria-pressed={drawing} onClick={onToggle}
         className={`flex items-center gap-2 rounded-lg px-3 py-1.5 font-bold ${drawing ? "bg-amber-400 text-gray-900" : "hover:bg-gray-100"}`}>
