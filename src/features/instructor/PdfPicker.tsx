@@ -13,7 +13,7 @@ const sizeLabel = (bytes: number) => (bytes < 1024 * 1024 ? `${Math.max(1, Math.
 const isPdf = (f: File) => f.type === "application/pdf" || /\.pdf$/i.test(f.name);
 
 // Big, obvious PDF picker: a drop area with a "Choose a PDF" button. Once a file is chosen it shows as a card
-// with a Remove button, so the professor can clear it and pick another.
+// with a Remove button, so the instructor can clear it and pick another.
 export function PdfPicker({ file, pages, disabled, onPick, onRemove }: Props) {
   const input = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);

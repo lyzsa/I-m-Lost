@@ -22,7 +22,7 @@ During the build each person owned one area, so work could happen in parallel wi
 
 | Area | Owner | Paths |
 | --- | --- | --- |
-| Instructor screens | Person A | `src/app/page.tsx`, `src/app/host/**`, `src/features/professor/**` |
+| Instructor screens | Person A | `src/app/page.tsx`, `src/app/host/**`, `src/features/instructor/**` |
 | Student screens | Person B | `src/app/join/**`, `src/app/class/**`, `src/features/student/**` |
 | Data, AI, hosting, merging | Person C | `src/lib/**`, `src/app/api/**`, `supabase/**`, config |
 | Shared | Agreed by all | `src/components/SlideView.tsx`, `src/features/annotations/**` |

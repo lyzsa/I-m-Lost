@@ -8,7 +8,7 @@ import * as mock from "./backend/mock";
 import * as real from "./backend/supabase";
 
 export type Backend = {
-  // Professor (Person A)
+  // Instructor (Person A)
   createSession(title: string, slides: { image: Blob; text: string }[]): Promise<Session>;
   getSession(sessionId: string): Promise<Session | null>;
   updateLive(sessionId: string, currentSlide: number, phase: LivePhase): Promise<void>;

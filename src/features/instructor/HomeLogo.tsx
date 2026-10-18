@@ -1,10 +1,11 @@
+import Image from "next/image";
 import Link from "next/link";
 
-// Top-corner logo. Clicking it goes back to the landing page.
+// Top-corner logo (the I'M LOST crest, public/logo.png). Clicking it goes back to the landing page.
 export function HomeLogo() {
   return (
     <Link href="/" aria-label="LOST home" className="inline-flex items-center gap-2 font-bold tracking-widest text-emerald-900">
-      <span className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-900 text-lg text-white">?</span>
+      <Image src="/logo.png" alt="" width={286} height={480} priority className="h-12 w-auto" />
       LOST
     </Link>
   );

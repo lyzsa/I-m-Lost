@@ -5,12 +5,12 @@ import { useParams } from "next/navigation";
 import { getAnnotations, getSession, getSlideSignals, type Annotation, type Session, type Signal } from "@/lib/api";
 import { SlideView } from "@/components/SlideView";
 import { AnnotationLayer } from "@/features/annotations/AnnotationLayer";
-import { ClusterOutlines } from "@/features/professor/DenseAreaLayer";
-import { findDenseAreas, type DenseArea } from "@/features/professor/denseAreas";
-import { HeatmapLayer } from "@/features/professor/HeatmapLayer";
-import { HomeLogo } from "@/features/professor/HomeLogo";
-import { ReasonPie } from "@/features/professor/ReasonPie";
-import { otherAnswers, slideStats } from "@/features/professor/stats";
+import { ClusterOutlines } from "@/features/instructor/DenseAreaLayer";
+import { findDenseAreas, type DenseArea } from "@/features/instructor/denseAreas";
+import { HeatmapLayer } from "@/features/instructor/HeatmapLayer";
+import { HomeLogo } from "@/features/instructor/HomeLogo";
+import { ReasonPie } from "@/features/instructor/ReasonPie";
+import { otherAnswers, slideStats } from "@/features/instructor/stats";
 
 type Loaded = { session: Session; bySlide: Signal[][]; strokesBySlide: Annotation[][] };
 const plural = (n: number, word: string) => `${word}${n === 1 ? "" : "s"}`;

@@ -1,6 +1,6 @@
 "use client";
-// Prev / slide thumbnails / Next under the student's slide (same look as the professor's SlideNav).
-// Unlike the professor's, it only changes what THIS phone shows; the class doesn't move.
+// Prev / slide thumbnails / Next under the student's slide (same look as the instructor's SlideNav).
+// Unlike the instructor's, it only changes what THIS phone shows; the class doesn't move.
 // The slide on screen has a green border, the class's live slide has a "LIVE" tag,
 // and slides where the student marked something have an orange dot.
 import { useEffect, useRef } from "react";
