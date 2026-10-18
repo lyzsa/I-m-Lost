@@ -231,7 +231,8 @@ export default function Page() {
     <main className="mx-auto max-w-3xl p-3 pb-8 text-[#0c2b4c] md:max-w-6xl md:p-6">
       <header className="mb-3 flex items-center gap-3">
         <CrestLogo />
-        <h1 className="min-w-0 flex-1 truncate text-lg font-bold">{session.title}</h1>
+        <span aria-hidden className="h-6 w-px shrink-0 bg-[#0c2b4c]/20" />
+        <h1 className="min-w-0 flex-1 truncate text-lg font-semibold text-[#3a6596]">{session.title}</h1>
         <span className="shrink-0 text-sm text-gray-600">Slide {shown} / {total}</span>
       </header>
 

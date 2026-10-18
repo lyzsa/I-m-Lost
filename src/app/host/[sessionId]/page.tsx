@@ -104,9 +104,10 @@ export default function HostLivePage() {
   return (
     <main className="mx-auto max-w-7xl p-4 md:p-6">
       <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex min-w-0 items-center gap-3">
           <HomeLogo />
-          <h1 className="text-2xl font-bold">{session.title}</h1>
+          <span aria-hidden className="h-7 w-px shrink-0 bg-[#0c2b4c]/20" />
+          <h1 className="min-w-0 truncate text-xl font-semibold text-[#3a6596]">{session.title}</h1>
         </div>
         <span className="text-sm text-gray-600">Instructor&apos;s view</span>
       </header>
