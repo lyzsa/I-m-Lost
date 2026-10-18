@@ -1,9 +1,11 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- fixed decorative art from public/landing, like the landing page */
+// Instructor start page. Same look as the student join page: the crest, navy ink, a white card on warm off-white.
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createSession } from "@/lib/api";
 import { CANCELLED, MAX_PAGES, countPdfPages, pdfToSlides } from "@/features/instructor/pdfToSlides";
-import { HomeLogo } from "@/features/instructor/HomeLogo";
 import { MyClassesList } from "@/features/instructor/MyClassesList";
 import { PdfPicker } from "@/features/instructor/PdfPicker";
 import { rememberClass } from "@/features/instructor/myClasses";
@@ -63,32 +65,37 @@ export default function HostPage() {
   const unusable = pages === undefined || pages > MAX_PAGES; // still checking, unreadable, or too long
 
   return (
-    <main className="mx-auto max-w-xl p-8">
-      <HomeLogo />
-      <p className="mt-10 text-sm font-bold tracking-widest text-emerald-700">INSTRUCTOR</p>
-      <h1 className="mt-2 text-4xl font-bold">Start a class</h1>
-      <div className="mt-8 space-y-5 rounded-2xl bg-white p-6">
-        <label className="block">
-          <span className="font-bold">Class title</span>
-          <input className="mt-2 w-full rounded-lg border p-3" placeholder="e.g. Pointers 101" value={title}
-            onChange={e => setTitle(e.target.value)} disabled={busy} />
-        </label>
-        <div>
-          <p className="mb-2 font-bold">Slides</p>
-          <PdfPicker file={file} pages={pages} disabled={busy} onPick={pick} onRemove={remove} />
-        </div>
-        <button className="w-full rounded-xl bg-emerald-900 p-4 text-lg text-white" disabled={!file || busy || unusable} onClick={create}>
-          {busy ? "Working..." : "Create class"}
-        </button>
-        {stage === "converting" && (
-          <button className="w-full rounded-xl border-2 border-gray-300 p-3" onClick={() => cancel.current?.abort()}>
-            Cancel
+    <main className="min-h-svh bg-[#faf9f7] text-[#0c2b4c]">
+      <div className="mx-auto max-w-md px-4 pb-10 pt-8">
+        <Link href="/" aria-label="LOST home" className="mx-auto block w-fit">
+          <img src="/landing/crest.webp" alt="I'm Lost crest" draggable={false} className="h-32 w-auto select-none" />
+        </Link>
+        <h1 className="mt-4 text-center text-3xl font-bold">Start your class</h1>
+        <p className="mb-6 mt-1 text-center text-gray-600">Upload your slides to get started.</p>
+        <div className="space-y-5 rounded-2xl bg-white p-5 shadow-sm">
+          <label className="block">
+            <span className="text-sm font-bold">Class title</span>
+            <input className="mt-2 w-full rounded-xl border-2 border-gray-200 p-4 text-lg focus:border-[#3a6596] focus:outline-none"
+              placeholder="e.g. Pointers 101" value={title} onChange={e => setTitle(e.target.value)} disabled={busy} />
+          </label>
+          <div>
+            <p className="mb-2 text-sm font-bold">Slides</p>
+            <PdfPicker file={file} pages={pages} disabled={busy} onPick={pick} onRemove={remove} />
+          </div>
+          <button className="w-full rounded-xl bg-[#0c2b4c] p-4 text-lg font-bold text-white"
+            disabled={!file || busy || unusable} onClick={create}>
+            {busy ? "Working..." : "Create class"}
           </button>
-        )}
-        <p role="status" className="text-sm text-emerald-800">{status}</p>
-        {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+          {stage === "converting" && (
+            <button className="w-full rounded-xl border-2 border-gray-300 p-3 font-bold" onClick={() => cancel.current?.abort()}>
+              Cancel
+            </button>
+          )}
+          <p role="status" className="text-sm text-[#3a6596] empty:hidden">{status}</p>
+          {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>}
+        </div>
+        <MyClassesList />
       </div>
-      <MyClassesList />
     </main>
   );
 }
