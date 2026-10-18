@@ -360,7 +360,7 @@ export default function Page() {
 
       {/* Phones: a bottom sheet, only while it's needed (picking reasons, or reading an explanation). */}
       {!wide && (painting || explain) && (
-        <div className="sticky bottom-0 z-10 -mx-3 mt-4 space-y-3 border-t border-[#c9d6e6] bg-[#edf2f9]/95 px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur">
+        <div className="sticky bottom-0 z-10 -mx-3 mt-4 space-y-3 border-t border-[#e8e5df] bg-[#faf9f7]/95 px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur">
           {sheet}
         </div>
       )}

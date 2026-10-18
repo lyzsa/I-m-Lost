@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- fixed decorative art from public/landing, like the landing page */
 // Student join page (docs/build-plan.md step B1). Owner: Person B.
-// Same look as the landing page: navy ink, the crest and a hand-drawn doodle, on the student screens' light blue.
+// Same look as the landing page: navy ink, the crest and a hand-drawn doodle, on the student screens' warm off-white.
 // JoinForm reads ?code= from the URL, so Next.js needs it inside <Suspense> for `npm run build`.
 import Link from "next/link";
 import { Suspense } from "react";
@@ -8,7 +8,7 @@ import JoinForm from "@/features/student/JoinForm";
 
 export default function Page() {
   return (
-    <main className="relative min-h-svh overflow-x-clip bg-[#edf2f9] text-[#0c2b4c]">
+    <main className="relative min-h-svh overflow-x-clip bg-[#faf9f7] text-[#0c2b4c]">
       <img src="/landing/question-marks.webp" alt="" aria-hidden draggable={false}
         className="pointer-events-none absolute right-4 top-6 w-16 select-none mix-blend-multiply md:right-16 md:w-24" />
       <div className="mx-auto max-w-md px-4 pb-10 pt-8">
