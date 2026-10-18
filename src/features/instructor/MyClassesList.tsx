@@ -10,7 +10,7 @@ export function MyClassesList() {
   if (!classes.length) return null;
 
   return (
-    <section className="mt-8 rounded-2xl bg-white p-6">
+    <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm">
       <h2 className="font-bold">Your classes on this device</h2>
       <p className="text-sm text-gray-600">Closed the tab? Pick up where you left off.</p>
       <ul className="mt-4 divide-y">
@@ -25,7 +25,7 @@ export function MyClassesList() {
             <div className="flex items-center gap-3">
               <button className="text-sm text-gray-500 underline"
                 onClick={() => { forgetClass(c.id); setClasses(getMyClasses()); }}>Remove</button>
-              <Link href={`/host/${c.id}`} className="rounded-xl bg-emerald-900 px-4 py-2 text-white">Resume</Link>
+              <Link href={`/host/${c.id}`} className="rounded-xl bg-[#0c2b4c] px-4 py-2 font-bold text-white">Resume</Link>
             </div>
           </li>
         ))}
