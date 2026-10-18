@@ -33,7 +33,7 @@ The app is built and deployed (https://i-m-lost.vercel.app). Work now is fixes a
 **Gotchas already known:**
 - This is Next.js 16: pages with `[sessionId]` in the path get the id via `useParams()` in client components. Read the Next.js note at the bottom of this file.
 - Components using state, effects or the contract functions need `"use client"` as their first line.
-- pdf.js only runs in the browser and is loaded inside the upload handler (`src/features/professor/pdfToSlides.ts`). It uses pdf.js's **legacy** build plus a small stream fix, because the normal build breaks uploads on Safari / iPhone / iPad. The worker lives in `public/pdfjs/`. Don't switch back to `import("pdfjs-dist")`.
+- pdf.js only runs in the browser and is loaded inside the upload handler (`src/features/instructor/pdfToSlides.ts`). It uses pdf.js's **legacy** build plus a small stream fix, because the normal build breaks uploads on Safari / iPhone / iPad. The worker lives in `public/pdfjs/`. Don't switch back to `import("pdfjs-dist")`.
 - The mock shrinks uploaded slides to fit browser storage (about 5 MB total), so test with short PDFs.
 - `next dev` and `next build` rewrite `next-env.d.ts`. Don't commit that change: `git checkout next-env.d.ts`.
 
@@ -46,7 +46,7 @@ The app is built and deployed (https://i-m-lost.vercel.app). Work now is fixes a
 5. **No new npm packages** unless the human confirms that Person C agreed.
 6. **Positions on a slide are fractions from 0 to 1 of the slide image.** Draw slides with `SlideView`/`RectBox`, never with pixel positions.
 7. **Never put secret keys in browser code.** AI calls happen only in `src/app/api/**`. Only `NEXT_PUBLIC_*` variables may be read in the browser.
-8. **Reuse before writing.** `src/lib/domain.ts` has `advance`, `atPoint`, `counts` and `categories`; `src/features/professor/denseAreas.ts` finds confusion spots; `src/features/annotations/` draws instructor ink.
+8. **Reuse before writing.** `src/lib/domain.ts` has `advance`, `atPoint`, `counts` and `categories`; `src/features/instructor/denseAreas.ts` finds confusion spots; `src/features/annotations/` draws instructor ink.
 9. **Before saying something is done**, run `npm run typecheck`, `npm test` and `npm run build`, and give the human exact steps to test it in the browser (with `NEXT_PUBLIC_USE_MOCK=true`, two tabs of the same browser can act as instructor and student).
 10. **Never resolve a Git conflict by deleting another person's code.** Stop and tell the human to call Person C.
 11. Use Tailwind classes and match the existing look. Design student screens for phones first.

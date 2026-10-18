@@ -14,7 +14,7 @@ GitHub Actions runs all three on every push and pull request ([`.github/workflow
 | --- | --- |
 | [`tests/domain.test.ts`](../tests/domain.test.ts) | Review comes before Next, even on empty slides; overlap counts every reason; I'm Lost adds no heat |
 | [`tests/mock.test.ts`](../tests/mock.test.ts) | The contract on the mock backend: join codes and errors, ended classes, live updates, one I'm Lost per slide, retry safety, validation, *Other* text, students only seeing their own marks, instructor strokes (retry safety, order, removal, validation) |
-| [`tests/professor.test.ts`](../tests/professor.test.ts) | Instructor logic: Review / Next / end of class, slide stats, heatmap without duplicates, confusion spots and their reasons, *Other* responses, live stroke events, finding the spot under the pointer |
+| [`tests/instructor.test.ts`](../tests/instructor.test.ts) | Instructor logic: Review / Next / end of class, slide stats, heatmap without duplicates, confusion spots and their reasons, *Other* responses, live stroke events, finding the spot under the pointer |
 
 The real Supabase backend and the AI routes were tested by hand against the team's Supabase project and Gemini (see the commit messages for C2, C4 and the annotations backend).
 
@@ -24,7 +24,7 @@ Use the live site (or a local build with `NEXT_PUBLIC_USE_MOCK=false`) with a la
 
 ### Join and follow
 
-1. Laptop: start page → *I'm the professor* → choose a short PDF → *Create class*. A code, a QR code and "0 joined" appear.
+1. Laptop: start page → *I'm the instructor* → choose a short PDF → *Create class*. A code, a QR code and "0 joined" appear.
 2. Phones: scan the QR code (or open `/join` and type the code). The joined count goes up. Both phones show slide 1.
 3. Laptop: *Next* / jump to slide 2. Both phones follow.
 4. Phone 1: tap slide 1 in the thumbnail strip. It stays there when the laptop moves on; tapping the **LIVE** slide returns.

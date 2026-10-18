@@ -27,7 +27,7 @@ export function LostButton({ sessionId, slideNumber, done, onSaved, onStatus, cl
       onSaved(await submitSignal({ id, sessionId, slideNumber, kind: "lost", categories: [] }));
       setState("saved");
       setFailedId(null);
-      onStatus("Saved. Your professor sees the count, never your name.", false);
+      onStatus("Saved. Your instructor sees the count, never your name.", false);
     } catch (err) {
       const text = err instanceof Error ? err.message : "Couldn't save";
       if (text === ALREADY) { setState("saved"); onStatus(ALREADY, false); return; }

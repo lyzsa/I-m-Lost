@@ -9,7 +9,7 @@ import { explainSignal, getMySignals, getSession, makeStudyGuide, type Session, 
 import { RectBox, SlideView } from "@/components/SlideView";
 import { ExplainRail } from "@/features/student/ExplainRail";
 import { InstructorInk } from "@/features/student/InstructorInk";
-import { HomeLogo } from "@/features/professor/HomeLogo"; // shared with the professor screens so the logo matches
+import { HomeLogo } from "@/features/instructor/HomeLogo"; // shared with the instructor screens so the logo matches
 
 type Guide = { status: "idle" | "writing" | "done" | "error"; text: string }; // text = the guide, or why the AI failed
 

@@ -1,4 +1,4 @@
-// Classes this browser has hosted, so a professor who closes the tab can resume (no login).
+// Classes this browser has hosted, so an instructor who closes the tab can resume (no login).
 // Lives only in this browser's storage: another laptop won't see these.
 import type { Session } from "@/lib/types";
 

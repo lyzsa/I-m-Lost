@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { nextLiveStep } from "../src/features/professor/liveStep";
+import { nextLiveStep } from "../src/features/instructor/liveStep";
 
 const slides = [1, 2, 3].map(number => ({ number, imageUrl: "", text: "" }));
 
@@ -13,7 +13,7 @@ test("main button: Review keeps the slide, Next moves on, last slide ends the cl
 });
 
 test("stats: Lost taps and boxes are separate; students are counted once; a box counts in every category it picked", async () => {
-  const { slideStats } = await import("../src/features/professor/stats");
+  const { slideStats } = await import("../src/features/instructor/stats");
   const base = { sessionId: "s", slideNumber: 1, createdAt: "" };
   const s = slideStats([
     { ...base, id: "1", studentId: "ana", kind: "lost", categories: [] },
@@ -24,13 +24,13 @@ test("stats: Lost taps and boxes are separate; students are counted once; a box 
 });
 
 test("heatmap list: merging live and loaded signals never duplicates a box", async () => {
-  const { mergeSignals } = await import("../src/features/professor/useSlideSignals");
+  const { mergeSignals } = await import("../src/features/instructor/useSlideSignals");
   const sig = (id: string) => ({ id, sessionId: "s", slideNumber: 1, studentId: "x", kind: "lost" as const, categories: [], createdAt: "" });
   assert.deepEqual(mergeSignals([sig("a"), sig("b")], [sig("b"), sig("c")]).map(s => s.id), ["a", "b", "c"]);
 });
 
 test("dense areas: only spots marked by enough different students become areas, each with its own reasons", async () => {
-  const { findDenseAreas } = await import("../src/features/professor/denseAreas");
+  const { findDenseAreas } = await import("../src/features/instructor/denseAreas");
   const box = (studentId: string, x: number, y: number, w: number, h: number, categories: any[]) =>
     ({ id: Math.random().toString(), sessionId: "s", slideNumber: 1, studentId, kind: "region" as const, rect: { x, y, width: w, height: h }, categories, createdAt: "" });
   const signals = [
@@ -56,8 +56,8 @@ test("dense areas: only spots marked by enough different students become areas, 
 });
 
 test("Other answers: only typed reasons from boxes that picked Other, oldest first, also per dense area", async () => {
-  const { otherAnswers } = await import("../src/features/professor/stats");
-  const { findDenseAreas } = await import("../src/features/professor/denseAreas");
+  const { otherAnswers } = await import("../src/features/instructor/stats");
+  const { findDenseAreas } = await import("../src/features/instructor/denseAreas");
   const box = (studentId: string, createdAt: string, categories: any[], otherText?: string) =>
     ({ id: studentId + createdAt, sessionId: "s", slideNumber: 1, studentId, kind: "region" as const,
        rect: { x: .2, y: .2, width: .3, height: .3 }, categories, otherText, createdAt });
@@ -83,8 +83,8 @@ test("instructor strokes: live events add this slide's strokes once, in time ord
 });
 
 test("spot windows: the spot under the pointer is found, and a spot keeps the same key across re-renders", async () => {
-  const { findDenseAreas } = await import("../src/features/professor/denseAreas");
-  const { areaAt, areaKey } = await import("../src/features/professor/DenseAreaLayer");
+  const { findDenseAreas } = await import("../src/features/instructor/denseAreas");
+  const { areaAt, areaKey } = await import("../src/features/instructor/DenseAreaLayer");
   const box = (studentId: string, x: number, y: number) =>
     ({ id: studentId + x, sessionId: "s", slideNumber: 1, studentId, kind: "region" as const, rect: { x, y, width: .2, height: .1 }, categories: ["Other" as const], createdAt: "" });
   const signals = [box("ana", .1, .1), box("ben", .12, .12), box("cam", .6, .7), box("dan", .62, .72)];

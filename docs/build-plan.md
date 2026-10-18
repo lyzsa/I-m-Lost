@@ -11,10 +11,10 @@
 
 ## 0. The short version
 
-We're building a website. The professor opens it on a laptop, uploads a PDF and gets a join code. Students open the same website on their phones and type the code. When the professor moves to the next slide, every phone moves with them. While looking at a slide, a student can tap **I'm Lost**, or draw a box around the confusing part and pick why it's confusing. Before moving on, the professor clicks **Review** and sees a heatmap: the more boxes overlap, the darker the area. A student can ask the AI to **Explain Now**, and after class they get a **Study Guide** built from what they marked.
+We're building a website. The instructor opens it on a laptop, uploads a PDF and gets a join code. Students open the same website on their phones and type the code. When the instructor moves to the next slide, every phone moves with them. While looking at a slide, a student can tap **I'm Lost**, or draw a box around the confusing part and pick why it's confusing. Before moving on, the instructor clicks **Review** and sees a heatmap: the more boxes overlap, the darker the area. A student can ask the AI to **Explain Now**, and after class they get a **Study Guide** built from what they marked.
 
 Work is split three ways:
-- **A** builds what the professor sees.
+- **A** builds what the instructor sees.
 - **B** builds what the students see.
 - **C** builds the hidden plumbing (database, live updates, AI, hosting) and merges everyone's work.
 
@@ -26,14 +26,14 @@ A and B never talk to the database directly. They call a fixed list of functions
 
 Start from the end. Everything we build exists to make this 3-minute demo work on the real website (laptop plus 2 phones):
 
-1. The professor uploads a 3-page PDF on the laptop (shown on the projector). A join code and QR code appear.
+1. The instructor uploads a 3-page PDF on the laptop (shown on the projector). A join code and QR code appear.
 2. Two phones join with the code. Both show slide 1.
 3. Phone 1 taps **I'm Lost**. Phone 2 draws a box around a formula and picks "Need an example" and "Why does this work?". Phone 1 also draws a box that partly overlaps it.
-4. The professor clicks **Review**. The slide stays put, the heatmap appears, and the overlapping area is darker. The professor clicks the dark spot and sees the category counts. The panel shows "1 quick Lost, 2 boxes".
-5. The professor clicks **Next**. Both phones jump to slide 2 within about 2 seconds.
-6. Phone 1 browses back to slide 1 and is not pulled forward when the professor moves on. It taps **Back to Live** and returns.
+4. The instructor clicks **Review**. The slide stays put, the heatmap appears, and the overlapping area is darker. The instructor clicks the dark spot and sees the category counts. The panel shows "1 quick Lost, 2 boxes".
+5. The instructor clicks **Next**. Both phones jump to slide 2 within about 2 seconds.
+6. Phone 1 browses back to slide 1 and is not pulled forward when the instructor moves on. It taps **Back to Live** and returns.
 7. Phone 2 draws a box on slide 2 and taps **Explain Now**. An AI explanation appears and mentions "Slide 2".
-8. The professor clicks **End class**. Phone 2 opens **My Review** and taps **Make my study guide**. A guide appears, organized by slide.
+8. The instructor clicks **End class**. Phone 2 opens **My Review** and taps **Make my study guide**. A guide appears, organized by slide.
 
 Our demo slides need one slide with plain text, one with a formula and one with a diagram.
 
@@ -45,7 +45,7 @@ The original plan is good, but about half of it is security and infrastructure t
 
 | Original plan (36h) | 10-hour version | Why |
 |---|---|---|
-| Professor login (Supabase Auth) | No login. Whoever has the professor link controls the class. | Login costs 1 to 2 hours and is invisible in the demo. |
+| Instructor login (Supabase Auth) | No login. Whoever has the instructor link controls the class. | Login costs 1 to 2 hours and is invisible in the demo. |
 | Anonymous student accounts and membership checks | A random student ID saved in the phone's browser, plus a name | Same visible behavior, about 20 lines of code |
 | Row-level security, database functions (RPC), permission tests | Off. This is a demo-only security setting. | This is the hardest part of the old plan and the easiest to get wrong. If judges ask, say so honestly. |
 | Lecture audio transcription | Cut | Optional in the PRD, and a big risk |
@@ -63,7 +63,7 @@ The original plan is good, but about half of it is security and infrastructure t
 ### 3.1 The pieces
 
 ```
-  Professor laptop                    Student phones
+  Instructor laptop                    Student phones
   (our website, /host/...)            (our website, /class/...)
           \                                  /
            \   read and write data, get     /
@@ -95,7 +95,7 @@ The original plan is good, but about half of it is security and infrastructure t
 | **Tailwind** | The styling system. You style elements with class names like `rounded bg-white p-3`. |
 | **Supabase** | A cloud service that gives us a database, file storage and live updates. Think of a shared online spreadsheet that every device can read and write, and that taps every device on the shoulder when something changes. |
 | **Table** | One "sheet" in the database, such as `signals`. |
-| **Realtime** | Supabase's shoulder tap. When the professor clicks Next, the `sessions` row changes and Supabase pushes that change to every phone that's listening. |
+| **Realtime** | Supabase's shoulder tap. When the instructor clicks Next, the `sessions` row changes and Supabase pushes that change to every phone that's listening. |
 | **Signal** | One piece of student feedback: an I'm Lost tap, or a box with categories. |
 | **API route** | Code that runs on the server, not in the browser. We need it for the AI because the AI key is a password, and anything in the browser can be seen by anyone. |
 | **Environment variables** (`.env.local`) | A private file on your computer that holds keys and settings. It is never committed to Git. |
@@ -108,9 +108,9 @@ The original plan is good, but about half of it is security and infrastructure t
 
 A phone screen and a projector have very different sizes. If we saved a box as "200 pixels from the left", it would land on the wrong words on another device. So every box is saved as **fractions of the slide, from 0 to 1**. For example, `x: 0.25` means "a quarter of the way across". Every screen draws boxes as percentages on top of the slide image, so they line up everywhere. The shared `<SlideView>` component (section 4.4) handles this. Always put slides inside it.
 
-### 3.4 What happens when the professor clicks Next
+### 3.4 What happens when the instructor clicks Next
 
-1. A's professor page calls `updateLive(sessionId, 2, "presenting")`.
+1. A's instructor page calls `updateLive(sessionId, 2, "presenting")`.
 2. C's code changes the `sessions` row in Supabase.
 3. Supabase Realtime pushes the new row to every phone that called `subscribeToSession`.
 4. B's student page receives it. If the student is following live, it shows slide 2. If the student is browsing on their own, it only updates the "class is on slide 2" banner.
@@ -174,7 +174,7 @@ A and B import data functions **only** from `@/lib/api`. Nobody except C imports
 |---|---|---|
 | `createSession(title, slides: {image: Blob; text: string}[]) → Session` | Uploads slide images, creates the class and a join code | A |
 | `getSession(sessionId) → Session \| null` | Loads a class | A, B |
-| `updateLive(sessionId, currentSlide, phase) → void` | Professor moves the class | A |
+| `updateLive(sessionId, currentSlide, phase) → void` | Instructor moves the class | A |
 | `subscribeToSession(sessionId, onChange) → unsubscribe` | Calls `onChange(session)` every time the live slide or phase changes | A, B |
 | `getSlideSignals(sessionId, slideNumber) → Signal[]` | All students' feedback for one slide | A |
 | `subscribeToSignals(sessionId, onNew) → unsubscribe` | Calls `onNew(signal)` whenever any student submits | A |
@@ -206,7 +206,7 @@ NEXT_PUBLIC_USE_MOCK=false   # real Supabase
 
 The mock includes a ready-made demo class (code `DEMO01`, 3 slides) and gives canned AI answers after a short delay. A and B keep the mock on until Checkpoint 1. To test sync with the mock, use two tabs **of the same browser**. Each tab counts as a different student.
 
-- Professor of the demo class: `http://localhost:3000/host/00000000-0000-4000-8000-000000000001`
+- Instructor of the demo class: `http://localhost:3000/host/00000000-0000-4000-8000-000000000001`
 - Student: `http://localhost:3000/join?code=DEMO01`
 - Reset the fake data: browser console, `localStorage.removeItem("lost-mock-db-v1")`, refresh.
 - Make the fake AI fail (to test error messages): `localStorage.setItem("lost-mock-fail-ai", "1")`.
@@ -228,9 +228,9 @@ The mock includes a ready-made demo class (code `DEMO01`, 3 slides) and gives ca
 
 | URL | Owner | Screen |
 |---|---|---|
-| `/` | A | Landing page with "I'm the professor" and "I'm a student" buttons |
+| `/` | A | Landing page with "I'm the instructor" and "I'm a student" buttons |
 | `/host` | A | Upload PDF and create the class |
-| `/host/[sessionId]` | A | Professor live screen |
+| `/host/[sessionId]` | A | Instructor live screen |
 | `/join` and `/join?code=K7Q2PX` | B | Student enters code and name (the QR code points here) |
 | `/class/[sessionId]` | B | Student live screen |
 | `/class/[sessionId]/review` | B | Student's saved items and study guide |
@@ -328,8 +328,8 @@ Slide images go in the `slides` bucket at `{sessionId}/{slideNumber}.png`.
 ```
 src/app/page.tsx                          A   landing page
 src/app/host/page.tsx                     A   upload + create
-src/app/host/[sessionId]/page.tsx         A   professor live screen
-src/features/professor/*                  A   pdfToSlides.ts, HeatmapLayer.tsx, StatsPanel.tsx, ...
+src/app/host/[sessionId]/page.tsx         A   instructor live screen
+src/features/instructor/*                  A   pdfToSlides.ts, HeatmapLayer.tsx, StatsPanel.tsx, ...
 
 src/app/join/page.tsx                     B
 src/app/class/[sessionId]/page.tsx        B   student live screen
@@ -355,24 +355,24 @@ Why C installs all packages up front: when two people each add a package, `packa
 
 ---
 
-## 7. Person A: Professor screens
+## 7. Person A: Instructor screens
 
-**You own:** `/`, `/host`, `/host/[sessionId]` and `src/features/professor/`.
+**You own:** `/`, `/host`, `/host/[sessionId]` and `src/features/instructor/`.
 **You use:** `createSession`, `getSession`, `updateLive`, `subscribeToSession`, `getSlideSignals`, `subscribeToSignals`, `countStudents`, plus `advance`, `atPoint` and `counts` from `domain.ts`, and `SlideView`/`RectBox`.
 
 ### Your steps, in order
 
-**A1. Landing page (15 min).** Two big buttons: "I'm the professor" goes to `/host`, "I'm a student" goes to `/join`. Keep the existing headline.
+**A1. Landing page (15 min).** Two big buttons: "I'm the instructor" goes to `/host`, "I'm a student" goes to `/join`. Keep the existing headline.
 *Test:* both buttons go to the right URL (a "page not found" is fine until the page exists).
 
-**A2. PDF to slide images (`src/features/professor/pdfToSlides.ts`, about 1 hour).** Write a function `pdfToSlides(file: File): Promise<{image: Blob; text: string}[]>` using the `pdfjs-dist` package. For each page, draw it onto a canvas at 2x scale, turn the canvas into a PNG Blob, and collect the page text with `page.getTextContent()`. Limit it to 20 pages.
+**A2. PDF to slide images (`src/features/instructor/pdfToSlides.ts`, about 1 hour).** Write a function `pdfToSlides(file: File): Promise<{image: Blob; text: string}[]>` using the `pdfjs-dist` package. For each page, draw it onto a canvas at 2x scale, turn the canvas into a PNG Blob, and collect the page text with `page.getTextContent()`. Limit it to 20 pages.
 *Known trouble spot:* pdf.js needs a "worker" file and only runs in the browser. If you see a worker error, copy `node_modules/pdfjs-dist/build/pdf.worker.min.mjs` into `public/` and set `GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs"`. Load pdf.js inside the upload handler with `await import("pdfjs-dist")`, not at the top of the file.
 *Plan B if pdf.js fights you for more than 45 minutes:* accept image files instead (`<input type="file" multiple accept="image/*">`; export the slides from PowerPoint, Keynote or Google Slides as PNGs). Each image becomes `{image: file, text: ""}`. The rest of the app doesn't change.
 
 **A3. `/host` page (30 min).** Title input, PDF picker and a "Create class" button. Show progress ("Converting page 2 of 3..."), call `createSession`, then go to `/host/{id}`.
-*Test (mock):* upload a 3-page PDF and land on the professor screen.
+*Test (mock):* upload a 3-page PDF and land on the instructor screen.
 
-**A4. Professor live screen, basic (1 hour).** Load with `getSession` and listen with `subscribeToSession`. Show:
+**A4. Instructor live screen, basic (1 hour).** Load with `getSession` and listen with `subscribeToSession`. Show:
 - the current slide in `<SlideView>`;
 - the join code in very large text, plus the link `{site}/join?code={code}`;
 - one main button that follows the Review/Next rule. Use `advance()` from `domain.ts`. The label reads "Review slide N" while presenting and "Next slide" while reviewing; on the last slide, while reviewing, it reads "End class" and sets the phase to `"ended"`. Disable the button while `updateLive` is running so a double-click can't skip a slide.
@@ -382,13 +382,13 @@ Why C installs all packages up front: when two people each add a package, `packa
 
 **A5. Heatmap (1 hour).** On each slide change, load `getSlideSignals`. Use `subscribeToSignals` to add new ones as they arrive (only if they match the current slide). Draw each `"region"` signal as `<RectBox className="bg-orange-500/25">`. Overlaps get darker automatically. Add a Clean/Heatmap toggle. Default: clean while presenting (students can see the projector) and heatmap while reviewing. Copy the approach from `/demo`.
 
-**A6. Stats panel (45 min).** For the current slide show: quick Lost count (`kind === "lost"`), number of boxes, how many different students gave feedback (`new Set(signals.map(s => s.studentId)).size`), and category totals from `counts()`. When the professor clicks on the slide, use `atPoint()` to show the counts **at that spot**. Add a small note: "Counts are boxes, not students."
+**A6. Stats panel (45 min).** For the current slide show: quick Lost count (`kind === "lost"`), number of boxes, how many different students gave feedback (`new Set(signals.map(s => s.studentId)).size`), and category totals from `counts()`. When the instructor clicks on the slide, use `atPoint()` to show the counts **at that spot**. Add a small note: "Counts are boxes, not students."
 
 **A7. Extras, if time allows.** Joined-students count (`countStudents`, refresh every 5 seconds). QR code with `<QRCodeSVG value={joinUrl} />` from `qrcode.react`. After "End class", a short per-slide summary ("Slide 1: 2 Lost, 3 boxes").
 
 ### Prompt to start your AI assistant
 
-> I'm Person A (Professor screens) on the LOST hackathon project. Read AGENTS.md, then TASKS.md sections 3, 4, 6 and 7. Help me do step A2 now. Only create or edit files I own (section 6). Get data only through functions in `@/lib/api`. Reuse code from `src/app/demo/page.tsx` where it fits. When done, run `npm run typecheck` and tell me exactly how to test it in the browser.
+> I'm Person A (Instructor screens) on the LOST hackathon project. Read AGENTS.md, then TASKS.md sections 3, 4, 6 and 7. Help me do step A2 now. Only create or edit files I own (section 6). Get data only through functions in `@/lib/api`. Reuse code from `src/app/demo/page.tsx` where it fits. When done, run `npm run typecheck` and tell me exactly how to test it in the browser.
 
 ---
 
@@ -408,11 +408,11 @@ Design for phones first: big buttons, everything usable with one thumb. Test in 
 - When the session changes and `following` is true, set `viewing` to the live slide.
 - The "Back" and "Forward" buttons set `following` to false and change `viewing`.
 - When not following, show a banner: "Class is on slide 3. **Back to Live**". Tapping it sets `following` to true and jumps to the live slide.
-- When `phase` is `"reviewing"`, show a small "Professor is reviewing feedback" label.
+- When `phase` is `"reviewing"`, show a small "Instructor is reviewing feedback" label.
 - When `phase` is `"ended"`, show "Class ended" and a button to `/class/{id}/review`.
 
 The `/demo` page already has this logic; copy it.
-*Test (mock):* professor page in tab 1, student page in tab 2. Clicking Next in tab 1 moves tab 2. Browsing in tab 2 isn't overridden.
+*Test (mock):* instructor page in tab 1, student page in tab 2. Clicking Next in tab 1 moves tab 2. Browsing in tab 2 isn't overridden.
 
 **B3. I'm Lost button (30 min).** Calls `submitSignal({id: crypto.randomUUID(), sessionId, slideNumber: viewing, kind: "lost", categories: []})`. Show "Saving...", then "Saved", or the error. If it fails, the "Try again" button must resend **the same id** (keep it in state), so a retry can't count twice.
 
@@ -506,7 +506,7 @@ const explanation = response.content.filter(b => b.type === "text").map(b => b.t
 
 ## 10. Timeline (H0 = start time)
 
-| Time | A (Professor) | B (Student) | C (Plumbing) |
+| Time | A (Instructor) | B (Student) | C (Plumbing) |
 |---|---|---|---|
 | **H0:00 to 0:30** | **Everyone together:** read sections 0 to 6, assign A/B/C, finish section 14, get all 3 laptops running `npm run dev`. | | |
 | H0:30 to 1:15 | Start A1, A2. Make the 3-slide demo PDF in parallel (any 3 slides: text, formula, diagram). | Start B1, B2. | C0 is already done. Start C1 (Supabase) and C3 (deploy). |
@@ -524,14 +524,14 @@ If Checkpoint 1 slips past **H5:00**, apply the cuts in section 12 immediately. 
 
 ## 11. Git, step by step
 
-**Once, at the start** (replace the branch name with yours: `a-professor`, `b-student` or `c-plumbing`):
+**Once, at the start** (replace the branch name with yours: `a-instructor`, `b-student` or `c-plumbing`):
 
 ```sh
 git clone https://github.com/lyzsa/I-m-Lost.git
 cd I-m-Lost
 npm ci
 cp .env.example .env.local
-git checkout -b a-professor
+git checkout -b a-instructor
 npm run dev            # open http://localhost:3000
 ```
 
@@ -541,8 +541,8 @@ The repo is private. The owner (`lyzsa`) must invite the other two under GitHub,
 
 ```sh
 git add -A
-git commit -m "professor: review/next button works"
-git push -u origin a-professor
+git commit -m "instructor: review/next button works"
+git push -u origin a-instructor
 ```
 
 **To get the latest shared code** (when C says "pull main", and at each checkpoint):
@@ -577,13 +577,13 @@ npm ci                 # only if C says packages changed
 ## 13. Final checklist (run on the Vercel link: laptop plus 2 phones)
 
 - [ ] Wrong code shows "No class with that code".
-- [ ] Both phones show the professor's current slide after joining.
+- [ ] Both phones show the instructor's current slide after joining.
 - [ ] First click (Review) keeps the slide and shows the heatmap. Second click (Next) moves both phones within about 2 seconds.
 - [ ] A phone that browsed to another slide isn't pulled along. Back to Live returns it.
 - [ ] I'm Lost raises the Lost count and adds no heat. A second tap on the same slide shows "already tapped".
 - [ ] Two overlapping boxes: the overlap is darker, and clicking it counts both boxes' categories.
 - [ ] Rotate a phone or resize the laptop window: boxes stay on the same words.
-- [ ] Refresh the professor page: feedback is still there.
+- [ ] Refresh the instructor page: feedback is still there.
 - [ ] Explain Now: the answer mentions the slide number. With the AI failing (for example, a wrong key on a test deploy), the item still appears in My Review.
 - [ ] Study guide only contains this student's items.
 - [ ] End class: phones show "Class ended" and a link to My Review.

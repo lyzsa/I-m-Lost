@@ -78,7 +78,7 @@ async function loadSlides(sessionId: string): Promise<Slide[]> {
   return slides;
 }
 
-// ---------- Professor ----------
+// ---------- Instructor ----------
 
 export async function createSession(title: string, slides: { image: Blob; text: string }[]): Promise<Session> {
   if (!slides.length) throw new Error("The PDF has no pages");
