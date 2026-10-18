@@ -1,6 +1,6 @@
 "use client";
 // Student live screen (docs/build-plan.md steps B2 to B5). Owner: Person B.
-// While `following`, the phone shows the professor's live slide. Prev/Next or a thumbnail stop following;
+// While `following`, the phone shows the instructor's live slide. Prev/Next or a thumbnail stop following;
 // "Back to Live" (or browsing onto the live slide) starts following again.
 // Painting only works after tapping "Point to the exact part" (paint mode), so a stray thumb can't mark anything.
 // In paint mode the slide is held still, so the mark can't land on the wrong slide.
@@ -21,7 +21,7 @@ import { BRUSH_MAX, BRUSH_MIN, BRUSH_START, PaintLayer, paintedBoxes, type Strok
 import { RegionPanel } from "@/features/student/RegionPanel";
 import { SlideStrip } from "@/features/student/SlideStrip";
 import { rememberClass } from "@/features/student/lastClass";
-import { CrestLogo } from "@/features/student/CrestLogo";
+import { HomeLogo } from "@/features/instructor/HomeLogo"; // shared with the instructor screens so the logo matches
 
 // The same pen drawing the instructor's toolbar uses, so both screens look alike.
 function PenIcon() {
@@ -80,7 +80,7 @@ export default function Page() {
   if (session === null)
     return (
       <main className="mx-auto max-w-md p-8 text-center">
-        <CrestLogo />
+        <HomeLogo />
         <h1 className="mt-6 text-2xl font-bold">Class not found</h1>
         <Link href="/join" className="mt-6 inline-block rounded-xl bg-[#0c2b4c] px-6 py-3 text-white">Join another class</Link>
       </main>
@@ -230,7 +230,7 @@ export default function Page() {
   return (
     <main className="mx-auto max-w-3xl p-3 pb-8 text-[#0c2b4c] md:max-w-6xl md:p-6">
       <header className="mb-3 flex items-center gap-3">
-        <CrestLogo />
+        <HomeLogo />
         <h1 className="min-w-0 flex-1 truncate text-lg font-bold">{session.title}</h1>
         <span className="shrink-0 text-sm text-gray-600">Slide {shown} / {total}</span>
       </header>
@@ -257,7 +257,7 @@ export default function Page() {
               <b className="rounded-lg bg-[#0c2b4c] px-3 py-1 text-white">Back to Live</b>
             </button>
           ) : session.phase === "reviewing" ? (
-            <p className="mb-3 rounded-xl bg-sky-100 p-3 text-sm">Professor is reviewing feedback</p>
+            <p className="mb-3 rounded-xl bg-sky-100 p-3 text-sm">Instructor is reviewing feedback</p>
           ) : null}
 
           <div className="flex gap-1.5">
@@ -307,7 +307,7 @@ export default function Page() {
             onGo={browse}
           />
 
-          {following && !painting && !ended && <p className="mt-3 text-center text-sm text-gray-500">Following the professor live</p>}
+          {following && !painting && !ended && <p className="mt-3 text-center text-sm text-gray-500">Following the instructor live</p>}
           {!wide && !painting && <div className="mt-2">{switchClass}</div>}
 
           {/* Phones: the bottom of the page. Once it scrolls into view, the floating buttons settle here. */}
@@ -324,7 +324,7 @@ export default function Page() {
           )}
         </section>
 
-        {/* Laptops and tablets: a side column, like the professor screen. */}
+        {/* Laptops and tablets: a side column, like the instructor screen. */}
         {wide && (
           <aside className="sticky top-6 space-y-3">
             {idle && (

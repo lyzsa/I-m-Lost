@@ -59,7 +59,7 @@ This file records what the team decided and why, so nobody has to dig through ch
 - **Donut charts** for reasons, with one fixed colour per reason on every screen, checked for colour-blind separation.
 - The instructor can **jump to any slide** (students follow) and **end the class at any time**, not only after the last slide.
 - The end-of-class summary has a slider labelled by **fewer / more students' annotations** instead of a technical "sensitivity" setting.
-- The UI says **instructor**, not professor, on the instructor side.
+- Every screen and doc says **instructor**, the term the team chose for whoever teaches the class.
 
 ### Instructor drawing
 

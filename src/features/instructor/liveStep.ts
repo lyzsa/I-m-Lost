@@ -1,4 +1,4 @@
-// What the professor's main button does next: Review -> Next -> ... -> (last slide) End class.
+// What the instructor's main button does next: Review -> Next -> ... -> (last slide) End class.
 import { advance } from "@/lib/domain";
 import type { LivePhase, Session } from "@/lib/types";
 

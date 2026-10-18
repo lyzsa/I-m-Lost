@@ -9,7 +9,7 @@ import { explainSignal, getMySignals, getSession, makeStudyGuide, type Session, 
 import { RectBox, SlideView } from "@/components/SlideView";
 import { ExplainRail } from "@/features/student/ExplainRail";
 import { InstructorInk } from "@/features/student/InstructorInk";
-import { CrestLogo } from "@/features/student/CrestLogo";
+import { HomeLogo } from "@/features/instructor/HomeLogo"; // shared with the instructor screens so the logo matches
 
 type Guide = { status: "idle" | "writing" | "done" | "error"; text: string }; // text = the guide, or why the AI failed
 
@@ -30,7 +30,7 @@ export default function Page() {
   if (session === null)
     return (
       <main className="mx-auto max-w-md p-8 text-center">
-        <CrestLogo />
+        <HomeLogo />
         <h1 className="mt-6 text-2xl font-bold">Class not found</h1>
         <Link href="/join" className="mt-6 inline-block rounded-xl bg-[#0c2b4c] px-6 py-3 text-white">Join another class</Link>
       </main>
@@ -75,7 +75,7 @@ export default function Page() {
     <main className="mx-auto max-w-2xl space-y-4 p-3 pb-10 text-[#0c2b4c] md:p-6">
       <header>
         <div className="flex items-center justify-between gap-3">
-          <CrestLogo />
+          <HomeLogo />
           <Link href={`/class/${session.id}`} className="text-sm text-gray-600">← Back to class</Link>
         </div>
         <h1 className="mt-4 text-2xl font-bold">My Review</h1>

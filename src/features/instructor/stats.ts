@@ -1,4 +1,4 @@
-// Numbers the professor sees for a set of signals (one slide, or the whole class).
+// Numbers the instructor sees for a set of signals (one slide, or the whole class).
 import { counts } from "@/lib/domain";
 import type { Signal } from "@/lib/types";
 

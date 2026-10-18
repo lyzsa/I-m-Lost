@@ -2,11 +2,11 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSession } from "@/lib/api";
-import { CANCELLED, MAX_PAGES, countPdfPages, pdfToSlides } from "@/features/professor/pdfToSlides";
-import { HomeLogo } from "@/features/professor/HomeLogo";
-import { MyClassesList } from "@/features/professor/MyClassesList";
-import { PdfPicker } from "@/features/professor/PdfPicker";
-import { rememberClass } from "@/features/professor/myClasses";
+import { CANCELLED, MAX_PAGES, countPdfPages, pdfToSlides } from "@/features/instructor/pdfToSlides";
+import { HomeLogo } from "@/features/instructor/HomeLogo";
+import { MyClassesList } from "@/features/instructor/MyClassesList";
+import { PdfPicker } from "@/features/instructor/PdfPicker";
+import { rememberClass } from "@/features/instructor/myClasses";
 
 export default function HostPage() {
   const router = useRouter();
@@ -65,7 +65,7 @@ export default function HostPage() {
   return (
     <main className="mx-auto max-w-xl p-8">
       <HomeLogo />
-      <p className="mt-10 text-sm font-bold tracking-widest text-emerald-700">PROFESSOR</p>
+      <p className="mt-10 text-sm font-bold tracking-widest text-emerald-700">INSTRUCTOR</p>
       <h1 className="mt-2 text-4xl font-bold">Start a class</h1>
       <div className="mt-8 space-y-5 rounded-2xl bg-white p-6">
         <label className="block">

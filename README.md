@@ -1,3 +1,5 @@
+<p align="center"><img src="public/logo.png" alt="The I'M LOST crest" width="150"></p>
+
 # LOST
 
 **Make confusion visible.** Students mark exactly where a lecture slide loses them, quietly and in real time. Before moving on, the instructor sees a heatmap of where the class is confused and why. Each student gets AI explanations of what they marked and a personal study guide after class.
@@ -146,7 +148,7 @@ src/
     join/, class/         student: join, live screen, My Review
     api/                  server routes that call Gemini
   features/
-    professor/            instructor screen components (heatmap, spots, charts, pen)
+    instructor/            instructor screen components (heatmap, spots, charts, pen)
     student/              student screen components (highlighter, reasons, AI panels)
     annotations/          instructor ink, shown on both sides
   components/SlideView.tsx  slide display shared by every screen
