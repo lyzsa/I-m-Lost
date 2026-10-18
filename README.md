@@ -179,8 +179,8 @@ This is a hackathon build. Security is demo-level: there is no instructor login,
 
 Built in 10 hours by a team of three, split by screen so the pieces could be built in parallel:
 
-- **Person A**: instructor screens
-- **Person B**: student screens
-- **Person C**: database, live sync, AI routes, hosting, and merging
+- **Person A, Yota Wang**: instructor screens
+- **Person B, Jessica Guan**: student screens
+- **Person C, Yunzi Li**: database, live sync, AI routes, hosting, and merging
 
 We built it with AI coding assistants. [AGENTS.md](AGENTS.md) holds the rules they followed.
